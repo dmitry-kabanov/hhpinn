@@ -15,12 +15,11 @@ class HodgeHelmholtzPINN:
         for neurons in self.hidden_layers:
             x = tf.keras.layers.Dense(neurons, activation="tanh")(x)
 
-        out = tf.keras.layers.Dense(2, activation=None)(x)
+        out = tf.keras.layers.Dense(1, activation=None)(x)
 
         model = tf.keras.models.Model(inputs=inp, outputs=out)
 
         return model
-
 
     def fit(self, x, y):
         x_train = tf.Variable(x, dtype=tf.float32)
@@ -33,13 +32,17 @@ class HodgeHelmholtzPINN:
 
         self.history = {"loss": []}
 
+        x1 = x_train[:, 0]
+        x2 = x_train[:, 0]
+
         for e in range(self.epochs):
             with tf.GradientTape() as tape:
                 y_pred = model(x_train)
 
                 # Build the curl operation
-                curl_res = tape.gradient(y_pred, x_train)
-                loss = tf.reduce_mean(curl_res - y_train, axis=1)
+                stream_func_grad = tape.gradient(y_pred, x_train)
+                misfit = stream_func_grad - y_train
+                loss = tf.reduce_mean(misfit**2, axis=1)
 
             grad = tape.gradient(loss, model.trainable_variables)
             opt.apply_gradients(zip(grad, model.trainable_variables))
