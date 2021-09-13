@@ -32,16 +32,16 @@ class HodgeHelmholtzPINN:
 
         self.history = {"loss": []}
 
-        x1 = x_train[:, 0]
-        x2 = x_train[:, 0]
-
         for e in range(self.epochs):
             with tf.GradientTape() as tape:
                 y_pred = model(x_train)
 
                 # Build the curl operation
                 stream_func_grad = tape.gradient(y_pred, x_train)
-                misfit = stream_func_grad - y_train
+                y_pred = tf.stack(
+                    [stream_func_grad[:, 1], -stream_func_grad[:, 0]]
+                )
+                misfit = y_pred - y_train
                 loss = tf.reduce_mean(misfit**2, axis=1)
 
             grad = tape.gradient(loss, model.trainable_variables)
