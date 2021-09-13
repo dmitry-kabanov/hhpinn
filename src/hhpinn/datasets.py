@@ -3,8 +3,6 @@ import numpy as np
 
 from typing import Tuple
 
-import divFourierSparse as df
-
 
 class TGV2D:
     """Dataset based on Taylor--Green 2D vortex data.
