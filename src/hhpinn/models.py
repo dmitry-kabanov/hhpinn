@@ -1,3 +1,5 @@
+import pickle
+
 import tensorflow as tf
 
 
@@ -62,3 +64,14 @@ class HodgeHelmholtzPINN:
         y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
         return y_pred.numpy()
+
+    def save(self, filename):
+        with open(filename, "wb") as fh:
+            pickle.dump(self, fh)
+
+    @classmethod
+    def load(cls, filename):
+        with open(filename, "rb") as fh:
+            obj = pickle.load(fh)
+
+        return obj
