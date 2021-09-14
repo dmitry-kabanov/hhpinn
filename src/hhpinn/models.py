@@ -53,9 +53,12 @@ class HodgeHelmholtzPINN:
 
     def predict(self, x_new):
         x_var = tf.Variable(x_new, dtype=tf.float32)
-        with tf.GradientTape(watch_access_variables=False) as tape:
-            y_pred = self.model(x_var)
+        with tf.GradientTape(watch_accessed_variables=False) as tape:
+            tape.watch(x_var)
+            psi = self.model(x_var)
 
-        curl_res = tape.gradient(y_pred, x_var)
+        # Compute velocity predictions from the stream function `psi`.
+        stream_func_grad = tape.gradient(psi, x_var)
+        y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-        return curl_res.numpy()
+        return y_pred.numpy()
