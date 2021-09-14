@@ -13,9 +13,11 @@ class HodgeHelmholtzPINN:
         inp = tf.keras.layers.Input(2)
         x = inp
         for neurons in self.hidden_layers:
-            x = tf.keras.layers.Dense(neurons, activation="tanh")(x)
+            x = tf.keras.layers.Dense(neurons, activation="tanh",
+                                      kernel_initializer="glorot_normal")(x)
 
-        out = tf.keras.layers.Dense(1, activation=None)(x)
+        out = tf.keras.layers.Dense(1, activation=None,
+                                    kernel_initializer="glorot_normal")(x)
 
         model = tf.keras.models.Model(inputs=inp, outputs=out)
 
