@@ -67,7 +67,7 @@ def compute():
     test_x, test_u = ds.load_data_on_grid(grid_size)
     pred_u = model.predict(test_x)
 
-    err_u = (pred_u[:, 0] - test_u[:, 0])**2
+    err_u = np.linalg.norm(pred_u - test_u, 2, axis=1)
 
     xg = test_x[:, 0].reshape(grid_size)
     yg = test_x[:, 1].reshape(grid_size)
