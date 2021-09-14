@@ -73,11 +73,9 @@ def compute():
     yg = test_x[:, 1].reshape(grid_size)
     err_ug = err_u.reshape(grid_size)
 
-    from matplotlib.patches import Circle
     plt.figure()
-    # for i in range(len(train_x)):
-    #     plt.gca().add_artist(Circle(train_x[i], radius=0.02, color="red"))
     plt.pcolormesh(xg, yg, err_ug)
+    plt.scatter(train_x[:, 0], train_x[:, 1], s=10, c="red")
     plt.colorbar()
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
