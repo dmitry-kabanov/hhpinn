@@ -9,6 +9,8 @@ import hhpinn
 
 from typing import Dict
 
+from hhpinn.utils import render_figure
+
 
 OUTDIR = "_output"
 
@@ -74,6 +76,11 @@ def plot(args: Dict):
     plt.ylabel("Loss")
     plt.tight_layout(pad=0.1)
 
+    render_figure(
+        to_file=os.path.join("_assets", "loss-history.pdf"),
+        save=args["save"]
+    )
+
     grid_size = (11, 11)
     test_x, test_u = ds.load_data_on_grid(grid_size)
     pred_u = model.predict(test_x)
@@ -91,3 +98,8 @@ def plot(args: Dict):
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
     plt.tight_layout(pad=0.1)
+
+    render_figure(
+        to_file=os.path.join("_assets", "error-field.pdf"),
+        save=args["save"]
+    )
