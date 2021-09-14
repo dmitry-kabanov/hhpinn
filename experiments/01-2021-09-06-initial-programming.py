@@ -62,3 +62,23 @@ def compute():
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.tight_layout(pad=0.1)
+
+    grid_size = (11, 11)
+    test_x, test_u = ds.load_data_on_grid(grid_size)
+    pred_u = model.predict(test_x)
+
+    err_u = (pred_u[:, 0] - test_u[:, 0])**2
+
+    xg = test_x[:, 0].reshape(grid_size)
+    yg = test_x[:, 1].reshape(grid_size)
+    err_ug = err_u.reshape(grid_size)
+
+    from matplotlib.patches import Circle
+    plt.figure()
+    # for i in range(len(train_x)):
+    #     plt.gca().add_artist(Circle(train_x[i], radius=0.02, color="red"))
+    plt.pcolormesh(xg, yg, err_ug)
+    plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$y$")
+    plt.tight_layout(pad=0.1)
