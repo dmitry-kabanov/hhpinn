@@ -54,8 +54,8 @@ def compute():
     train_x, train_u = ds.load_data()
 
     model = hhpinn.models.HodgeHelmholtzPINN(
-        hidden_layers=[10],
-        epochs=50,
+        hidden_layers=[20],
+        epochs=20000,
         learning_rate=0.01,
     )
 
