@@ -12,6 +12,8 @@ from typing import Dict
 
 OUTDIR = "_output"
 
+RESULT_MODEL = os.path.join(OUTDIR, "model.pkl")
+
 
 def main(args=None):
     args = parse_args(args)
@@ -56,6 +58,15 @@ def compute():
     )
 
     model.fit(train_x, train_u)
+
+    model.save(RESULT_MODEL)
+
+
+def plot(args: Dict):
+    ds = hhpinn.datasets.TGV2D()
+    train_x, train_u = ds.load_data()
+
+    model = hhpinn.models.HodgeHelmholtzPINN.load(RESULT_MODEL)
 
     plt.figure()
     plt.plot(model.history["loss"], "-", label="Loss")
