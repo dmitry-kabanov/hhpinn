@@ -35,16 +35,16 @@ class HodgeHelmholtzPINN:
         self.history = {"loss": []}
 
         for e in range(self.epochs):
-            with tf.GradientTape() as tape:
-                y_pred = model(x_train)
+            with tf.GradientTape(persistent=True) as tape:
+                psi = model(x_train)
 
-                # Build the curl operation
-                stream_func_grad = tape.gradient(y_pred, x_train)
-                y_pred = tf.stack(
-                    [stream_func_grad[:, 1], -stream_func_grad[:, 0]]
-                )
+                # Compute velocity predictions from the stream function `psi`.
+                stream_func_grad = tape.gradient(psi, x_train)
+                y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+
                 misfit = y_pred - y_train
-                loss = tf.reduce_mean(misfit**2, axis=1)
+                misfit_sq = tf.norm(misfit, 2, axis=1)**2
+                loss = tf.reduce_mean(misfit_sq)
 
             grad = tape.gradient(loss, model.trainable_variables)
             opt.apply_gradients(zip(grad, model.trainable_variables))
