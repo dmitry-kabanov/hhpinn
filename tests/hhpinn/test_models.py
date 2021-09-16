@@ -80,3 +80,12 @@ class TestHodgeHelmholtzPINN:
             npt.assert_array_equal(
                 m1.model.trainable_variables[i], m2.model.trainable_variables[i]
             )
+
+    def test_save_load_after_training_history_is_saved(self, tmpdir):
+        m1 = HodgeHelmholtzPINN(hidden_layers=[10], epochs=5, learning_rate=0.1)
+        m1.fit(np.random.normal(size=(10, 2)), np.random.normal(size=(10, 2)))
+
+        m1.save(tmpdir)
+        m2 = HodgeHelmholtzPINN.load(tmpdir)
+
+        assert m1.history == m2.history

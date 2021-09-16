@@ -13,6 +13,7 @@ class HodgeHelmholtzPINN:
         self._nparams = 3
 
         self.model = None
+        self.history = None
 
     def get_params(self):
         params = {
@@ -89,6 +90,11 @@ class HodgeHelmholtzPINN:
         if self.model:
             self.model.save(os.path.join(dirname, "model"))
 
+        if self.history:
+            history_file = os.path.join(dirname, "history.pkl")
+            with open(history_file, "wb") as fh:
+                pickle.dump(self.history, fh)
+
     @classmethod
     def load(cls, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
@@ -101,5 +107,10 @@ class HodgeHelmholtzPINN:
         keras_model = os.path.join(dirname, "model")
         if os.path.exists(keras_model):
             obj.model = tf.keras.models.load_model(keras_model)
+
+        history_file = os.path.join(dirname, "history.pkl")
+        if os.path.exists(history_file):
+            with open(history_file, "rb") as fh:
+                obj.history = pickle.load(fh)
 
         return obj
