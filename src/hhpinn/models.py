@@ -9,6 +9,17 @@ class HodgeHelmholtzPINN:
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self._nparams = 3
+
+    def get_params(self):
+        params = {
+            "hidden_layers": self.hidden_layers,
+            "epochs": self.epochs,
+            "learning_rate": self.learning_rate,
+        }
+        assert len(params) == self._nparams
+
+        return params
 
     def build_model(self) -> tf.keras.models.Model:
         """Build and return Keras model with given hyperparameters."""
