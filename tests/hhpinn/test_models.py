@@ -19,9 +19,7 @@ class TestHodgeHelmholtzPINN:
         npt.assert_equal(sut.learning_rate, LEARNING_RATE)
 
     def test_linear_model_returns_correct_output(self):
-        sut = HodgeHelmholtzPINN(
-            hidden_layers=[], epochs=0
-        )
+        sut = HodgeHelmholtzPINN(hidden_layers=[], epochs=0)
         sut.fit(np.zeros((10, 2)), np.zeros((10, 2)))
         weights = sut.model.trainable_variables[0]
 
@@ -37,9 +35,7 @@ class TestHodgeHelmholtzPINN:
             npt.assert_allclose(uy[i], -weights[0])
 
     def test_nonlinear_model_has_correct_number_of_neurons(self):
-        sut = HodgeHelmholtzPINN(
-            hidden_layers=[3]
-        )
+        sut = HodgeHelmholtzPINN(hidden_layers=[3])
 
         # Expected number of neurons.
         exp_neurons = 3 * 2 + 3 + 1 * 3 + 0
@@ -51,9 +47,7 @@ class TestHodgeHelmholtzPINN:
         assert actual_neurons == exp_neurons
 
     def test_nonlinear_model_has_correct_number_of_neurons_two_layers(self):
-        sut = HodgeHelmholtzPINN(
-            hidden_layers=[3, 7]
-        )
+        sut = HodgeHelmholtzPINN(hidden_layers=[3, 7])
 
         # Expected number of neurons. There is no bias in the output layer
         # as it does not play any role in training and prediction
@@ -83,5 +77,6 @@ class TestHodgeHelmholtzPINN:
         m2 = HodgeHelmholtzPINN.load(tmpdir)
 
         for i in range(len(m1.model.trainable_variables)):
-            npt.assert_array_equal(m1.model.trainable_variables[i],
-                             m2.model.trainable_variables[i])
+            npt.assert_array_equal(
+                m1.model.trainable_variables[i], m2.model.trainable_variables[i]
+            )
