@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import tensorflow as tf
@@ -78,13 +79,26 @@ class HodgeHelmholtzPINN:
 
         return y_pred.numpy()
 
-    def save(self, filename):
+    def save(self, dirname):
+        filename = os.path.join(dirname, "model_params.pkl")
+        params = self.get_params()
         with open(filename, "wb") as fh:
-            pickle.dump(self, fh)
+            pickle.dump(params, fh)
+
+        if self.model:
+            self.model.save(os.path.join(dirname, "model"))
 
     @classmethod
-    def load(cls, filename):
+    def load(cls, dirname):
+        filename = os.path.join(dirname, "model_params.pkl")
         with open(filename, "rb") as fh:
-            obj = pickle.load(fh)
+            params = pickle.load(fh)
+
+        obj = cls(**params)
+
+        # Load Keras model if its folder exists.
+        keras_model = os.path.join(dirname, "model")
+        if os.path.exists(keras_model):
+            obj.model = tf.keras.models.load_model(keras_model)
 
         return obj
