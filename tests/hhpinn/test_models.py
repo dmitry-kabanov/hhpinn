@@ -36,6 +36,34 @@ class TestHodgeHelmholtzPINN:
         for i in range(len(uy)):
             npt.assert_allclose(uy[i], -weights[0])
 
+    def test_nonlinear_model_has_correct_number_of_neurons(self):
+        sut = HodgeHelmholtzPINN(
+            hidden_layers=[3]
+        )
+
+        # Expected number of neurons.
+        exp_neurons = 3 * 2 + 3 + 1 * 3 + 1
+
+        actual_neurons = 0
+        for w in sut.build_model().trainable_variables:
+            actual_neurons += np.prod(w.shape)
+
+        assert actual_neurons == exp_neurons
+
+    def test_nonlinear_model_has_correct_number_of_neurons_two_layers(self):
+        sut = HodgeHelmholtzPINN(
+            hidden_layers=[3, 7]
+        )
+
+        # Expected number of neurons.
+        exp_neurons = 3 * 2 + 3 + 7 * 3 + 7 + 1 * 7 + 1
+
+        actual_neurons = 0
+        for w in sut.build_model().trainable_variables:
+            actual_neurons += np.prod(w.shape)
+
+        assert actual_neurons == exp_neurons
+
     def test_save_load_before_training(self, tmpdir):
         # Variable `tmpdir` is a `pytest` fixture.
         m1 = HodgeHelmholtzPINN()
