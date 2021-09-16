@@ -42,7 +42,7 @@ class TestHodgeHelmholtzPINN:
         )
 
         # Expected number of neurons.
-        exp_neurons = 3 * 2 + 3 + 1 * 3 + 1
+        exp_neurons = 3 * 2 + 3 + 1 * 3 + 0
 
         actual_neurons = 0
         for w in sut.build_model().trainable_variables:
@@ -55,8 +55,10 @@ class TestHodgeHelmholtzPINN:
             hidden_layers=[3, 7]
         )
 
-        # Expected number of neurons.
-        exp_neurons = 3 * 2 + 3 + 7 * 3 + 7 + 1 * 7 + 1
+        # Expected number of neurons. There is no bias in the output layer
+        # as it does not play any role in training and prediction
+        # due to differentiation of the model.
+        exp_neurons = 3 * 2 + 3 + 7 * 3 + 7 + 1 * 7 + 0
 
         actual_neurons = 0
         for w in sut.build_model().trainable_variables:

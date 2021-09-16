@@ -33,6 +33,7 @@ class HodgeHelmholtzPINN:
                                       kernel_initializer="glorot_normal")(x)
 
         out = tf.keras.layers.Dense(1, activation=None,
+                                    use_bias=False,
                                     kernel_initializer="glorot_normal")(x)
 
         model = tf.keras.models.Model(inputs=inp, outputs=out)
