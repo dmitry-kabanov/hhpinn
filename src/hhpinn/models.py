@@ -11,6 +11,8 @@ class HodgeHelmholtzPINN:
         self.learning_rate = learning_rate
         self._nparams = 3
 
+        self.model = None
+
     def get_params(self):
         params = {
             "hidden_layers": self.hidden_layers,
