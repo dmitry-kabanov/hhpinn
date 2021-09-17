@@ -3,6 +3,8 @@ import pickle
 
 import tensorflow as tf
 
+from sklearn.preprocessing import StandardScaler
+
 
 class HodgeHelmholtzPINN:
     """Physics-informed neural network for learning fluid flows."""
@@ -42,8 +44,13 @@ class HodgeHelmholtzPINN:
         return model
 
     def fit(self, x, y):
-        x_train = tf.Variable(x, dtype=tf.float32)
-        y_train = tf.Variable(y, dtype=tf.float32)
+        self.transformer = StandardScaler()
+        self.transformer.fit(x)
+        xs = self.transformer.transform(x)
+        ys = y
+
+        x_train = tf.Variable(xs, dtype=tf.float32)
+        y_train = tf.Variable(ys, dtype=tf.float32)
 
         model = self.build_model()
         self.model = model
@@ -70,7 +77,9 @@ class HodgeHelmholtzPINN:
             self.history["loss"].append(loss.numpy())
 
     def predict(self, x_new):
-        x_var = tf.Variable(x_new, dtype=tf.float32)
+        x_new_s = self.transformer.transform(x_new)
+
+        x_var = tf.Variable(x_new_s, dtype=tf.float32)
         with tf.GradientTape(watch_accessed_variables=False) as tape:
             tape.watch(x_var)
             psi = self.model(x_var)
