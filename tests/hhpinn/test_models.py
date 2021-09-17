@@ -89,3 +89,16 @@ class TestHodgeHelmholtzPINN:
         m2 = HodgeHelmholtzPINN.load(tmpdir)
 
         assert m1.history == m2.history
+
+    def test_save_load_after_training_transformer_is_saved(self, tmpdir):
+        m1 = HodgeHelmholtzPINN(hidden_layers=[10], epochs=5, learning_rate=0.1)
+        m1.fit(np.random.normal(size=(10, 2)), np.random.normal(size=(10, 2)))
+
+        m1.save(tmpdir)
+        m2 = HodgeHelmholtzPINN.load(tmpdir)
+
+        x_new = np.random.normal(size=(10, 2))
+
+        npt.assert_array_equal(
+            m1.transformer.transform(x_new), m2.transformer.transform(x_new)
+        )
