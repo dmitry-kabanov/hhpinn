@@ -16,6 +16,7 @@ class HodgeHelmholtzPINN:
 
         self.model = None
         self.history = None
+        self.transformer = None
 
     def get_params(self):
         params = {
@@ -104,6 +105,11 @@ class HodgeHelmholtzPINN:
             with open(history_file, "wb") as fh:
                 pickle.dump(self.history, fh)
 
+        if self.transformer:
+            tfile = os.path.join(dirname, "transformer.pkl")
+            with open(tfile, "wb") as fh:
+                pickle.dump(self.transformer, fh)
+
     @classmethod
     def load(cls, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
@@ -121,5 +127,10 @@ class HodgeHelmholtzPINN:
         if os.path.exists(history_file):
             with open(history_file, "rb") as fh:
                 obj.history = pickle.load(fh)
+
+        tfile = os.path.join(dirname, "transformer.pkl")
+        if os.path.exists(tfile):
+            with open(tfile, "rb") as fh:
+                obj.transformer = pickle.load(fh)
 
         return obj
