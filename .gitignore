@@ -1,3 +1,4 @@
 # Python byte-compiled, optimized code
 __pycache__/
 *.py[cod]
+.ipynb_checkpoints/
