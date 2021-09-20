@@ -102,3 +102,22 @@ class TestHodgeHelmholtzPINN:
         npt.assert_array_equal(
             m1.transformer.transform(x_new), m2.transformer.transform(x_new)
         )
+
+    def test_connected_correctly(self):
+        # Relatively rigid test to check that MLP network is wired correctly.
+        model = HodgeHelmholtzPINN(
+            hidden_layers=[3]
+        )
+        nn = model.build_model()
+
+        w1 = np.array([[3.0, 4.0], [7.0, 5.0], [1.0, 6.0]]).T
+        b1 = np.array([1.0, 2.0, 3.0])
+        o1 = np.array([[0.5, 1.2, 1.9]]).T
+        nn.set_weights([w1, b1, o1])
+
+        x = np.array([[27.0, 15.0], [3.0, 2.0], [-1, 2.0], [7.0, 4.0]])
+
+        desired = np.tanh(x @ w1 + b1) @ o1
+        actual = nn(x)
+
+        npt.assert_allclose(actual, desired, rtol=1e-7, atol=1e-7)
