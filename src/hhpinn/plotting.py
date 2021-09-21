@@ -1,7 +1,12 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from matplotlib.patches import Circle
+
+plt.style.use("seaborn")
+plt.style.use("seaborn-paper")
+matplotlib.rcParams["figure.figsize"] = (6, 3.7)
 
 
 def plot_stream_field_2D(N, domain, x_values, u_values):
@@ -18,9 +23,8 @@ def plot_stream_field_2D(N, domain, x_values, u_values):
 
     speed = np.sqrt(U**2 + V**2)
 
-    fig = plt.figure(figsize=(16, 8))
+    fig = plt.figure()
     ax = fig.add_subplot(111)
-    color = 2.0 * np.log(np.hypot(U, V))
     lw = 5.0 * speed / speed.max()
     al = 5.0 * speed.max()
     for i in range(len(x_values)):
@@ -46,7 +50,7 @@ def plot_stream_field_2D(N, domain, x_values, u_values):
         V,
         linewidth=lw,
         color="k",
-        density=2.0,
+        density=1.0,
         arrowstyle="->",
         arrowsize=0.5,
     )
