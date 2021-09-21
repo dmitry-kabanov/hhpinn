@@ -8,11 +8,13 @@ from sklearn.preprocessing import StandardScaler
 
 class HodgeHelmholtzPINN:
     """Physics-informed neural network for learning fluid flows."""
-    def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01):
+    def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01,
+                 save_grad_norm=False):
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.learning_rate = learning_rate
-        self._nparams = 3
+        self.save_grad_norm = save_grad_norm
+        self._nparams = 4
 
         self.model = None
         self.history = None
@@ -23,6 +25,7 @@ class HodgeHelmholtzPINN:
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
             "learning_rate": self.learning_rate,
+            "save_grad_norm": self.save_grad_norm,
         }
         assert len(params) == self._nparams
 
