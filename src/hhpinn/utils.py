@@ -1,3 +1,4 @@
+import logging
 import os
 
 import matplotlib.pyplot as plt
@@ -30,5 +31,6 @@ def render_figure(fig=None, to_file='figure.pdf', save=False):
             os.makedirs(dirname)
 
         fig.savefig(to_file)
+        logging.info("Save figure to file `%s`" % to_file)
     else:
         plt.show()
