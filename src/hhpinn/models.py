@@ -1,6 +1,7 @@
 import os
 import pickle
 
+import numpy as np
 import tensorflow as tf
 
 from sklearn.preprocessing import StandardScaler
@@ -63,6 +64,10 @@ class HodgeHelmholtzPINN:
 
         self.history = {"loss": []}
 
+        if self.save_grad_norm:
+            self.history["grad_inf_norm"] = []
+            self.history["grad_l2_norm"] = []
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape:
                 psi = model(x_train)
@@ -79,6 +84,15 @@ class HodgeHelmholtzPINN:
             opt.apply_gradients(zip(grad, model.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
+
+            if self.save_grad_norm:
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad])
+                self.history["grad_inf_norm"].append(
+                    np.linalg.norm(flat_grad, ord=np.inf)
+                )
+                self.history["grad_l2_norm"].append(
+                    np.linalg.norm(flat_grad, ord=2)
+                )
 
     def predict(self, x_new):
         x_new_s = self.transformer.transform(x_new)
