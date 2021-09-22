@@ -8,11 +8,13 @@ from sklearn.preprocessing import StandardScaler
 
 class HodgeHelmholtzPINN:
     """Physics-informed neural network for learning fluid flows."""
-    def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01):
+    def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01,
+                 preprocessing="identity"):
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.learning_rate = learning_rate
-        self._nparams = 3
+        self.preprocessing = preprocessing
+        self._nparams = 4
 
         self.model = None
         self.history = None
@@ -23,6 +25,7 @@ class HodgeHelmholtzPINN:
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
             "learning_rate": self.learning_rate,
+            "preprocessing": self.preprocessing,
         }
         assert len(params) == self._nparams
 
@@ -45,10 +48,16 @@ class HodgeHelmholtzPINN:
         return model
 
     def fit(self, x, y):
-        self.transformer = StandardScaler()
-        self.transformer.fit(x)
-        xs = self.transformer.transform(x)
-        ys = y
+        if self.preprocessing == "identity":
+            xs = x
+            ys = y
+        elif self.preprocessing == "standardization":
+            self.transformer = StandardScaler()
+            self.transformer.fit(x)
+            xs = self.transformer.transform(x)
+            ys = y
+        else:
+            raise ValueError("Unknown values for preprocessing")
 
         x_train = tf.Variable(xs, dtype=tf.float32)
         y_train = tf.Variable(ys, dtype=tf.float32)
@@ -78,7 +87,10 @@ class HodgeHelmholtzPINN:
             self.history["loss"].append(loss.numpy())
 
     def predict(self, x_new):
-        x_new_s = self.transformer.transform(x_new)
+        if self.preprocessing == "identity":
+            x_new_s = x_new
+        else:
+            x_new_s = self.transformer.transform(x_new)
 
         x_var = tf.Variable(x_new_s, dtype=tf.float32)
         with tf.GradientTape(watch_accessed_variables=False) as tape:
