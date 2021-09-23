@@ -71,3 +71,24 @@ def plot_stream_field_2D(N, domain, x_values, u_values):
     ax.set_ylim(-0.1*domain[1], 1.1*domain[1])
     ax.set_aspect("equal")
     fig.tight_layout(pad=0.1)
+
+
+def plot_error_field_2D(inputs, errors, locs=[], grid_size=None):
+    assert inputs.ndim == 2
+    assert errors.ndim == 1
+    assert inputs.shape[1] == 2
+
+    xg = inputs[:, 0].reshape(grid_size)
+    yg = inputs[:, 1].reshape(grid_size)
+    err_ug = errors.reshape(grid_size)
+
+    fig = plt.figure()
+    plt.pcolormesh(xg, yg, err_ug)
+    if locs is not None:
+        plt.scatter(locs[:, 0], locs[:, 1], s=30, c="red")
+    plt.colorbar()
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$y$")
+    fig.tight_layout(pad=0.1)
+
+    return fig

@@ -240,40 +240,20 @@ render_figure(
 # We can see that the ADAM models is more accurate.
 
 # %%
-err_u = np.linalg.norm(pred_u_sgd - test_u, 2, axis=1)
-
-xg = test_x[:, 0].reshape(GRID_SIZE)
-yg = test_x[:, 1].reshape(GRID_SIZE)
-err_ug = err_u.reshape(GRID_SIZE)
-
-plt.figure()
-plt.pcolormesh(xg, yg, err_ug)
-plt.scatter(train_x[:, 0], train_x[:, 1], s=30, c="red")
-plt.colorbar()
-plt.xlabel(r"$x$")
-plt.ylabel(r"$y$")
-plt.tight_layout(pad=0.1)
+err_u_sgd = np.linalg.norm(pred_u_sgd - test_u, 2, axis=1)
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_sgd, train_x, GRID_SIZE)
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=sgd.pdf"),
     save=args["save"]
 )
 
-err_u = np.linalg.norm(pred_u_adam - test_u, 2, axis=1)
-
-xg = test_x[:, 0].reshape(GRID_SIZE)
-yg = test_x[:, 1].reshape(GRID_SIZE)
-err_ug = err_u.reshape(GRID_SIZE)
-
-plt.figure()
-plt.pcolormesh(xg, yg, err_ug)
-plt.scatter(train_x[:, 0], train_x[:, 1], s=30, c="red")
-plt.colorbar()
-plt.xlabel(r"$x$")
-plt.ylabel(r"$y$")
-plt.tight_layout(pad=0.1)
+err_u_adam = np.linalg.norm(pred_u_adam - test_u, 2, axis=1)
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_adam, train_x, GRID_SIZE)
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=adam.pdf"),
     save=args["save"]
 )
+
+# %%
