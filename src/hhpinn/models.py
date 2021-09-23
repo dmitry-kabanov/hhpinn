@@ -7,17 +7,18 @@ import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 
 
-    """Physics-informed neural network for learning fluid flows."""
-    def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01,
 class StreamFunctionPINN:
+    """Physics-informed neural network for learning 2D fluid flows."""
+    def __init__(self, hidden_layers=[10], epochs=50, optimizer="sgd", learning_rate=0.01,
                  preprocessing="identity",
                  save_grad_norm=False):
         self.hidden_layers = hidden_layers
         self.epochs = epochs
+        self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
-        self._nparams = 5
+        self._nparams = 6
 
         self.model = None
         self.history = None
@@ -27,6 +28,7 @@ class StreamFunctionPINN:
         params = {
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
+            "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
             "save_grad_norm": self.save_grad_norm,
@@ -69,7 +71,14 @@ class StreamFunctionPINN:
         model = self.build_model()
         self.model = model
 
-        opt = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
+        # Instantiate optimizer.
+        if self.optimizer == "sgd":
+            opt = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
+        elif self.optimizer == "adam":
+            opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+        else:
+            raise ValueError("Unknown value for optimizer")
+        self.opt = opt
 
         self.history = {"loss": []}
 

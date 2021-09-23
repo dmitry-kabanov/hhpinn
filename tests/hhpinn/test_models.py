@@ -1,10 +1,20 @@
 import numpy as np
 import numpy.testing as npt
+import tensorflow as tf
 
 from hhpinn.models import StreamFunctionPINN
 
 
 class TestStreamFunctionPINN:
+    def test_default_hyperparameters(self):
+        sut = StreamFunctionPINN()
+
+        assert sut.hidden_layers == [10]
+        assert sut.epochs == 50
+        assert sut.learning_rate == 0.01
+        assert sut.preprocessing == "identity"
+        assert sut.optimizer == "sgd"
+
     def test_saves_hyperparameters(self):
         HIDDEN_LAYERS = [27, 8, 101]
         EPOCHS = 22
@@ -123,3 +133,21 @@ class TestStreamFunctionPINN:
         actual = nn(x)
 
         npt.assert_allclose(actual, desired, rtol=1e-7, atol=1e-7)
+
+    def test_default_optimizer_used(self):
+        model = StreamFunctionPINN(epochs=3)
+        x = np.random.random(size=(10, 2))
+        y = np.random.random(size=(10, 2))
+
+        model.fit(x, y)
+
+        assert isinstance(model.opt, tf.keras.optimizers.SGD)
+
+    def test_non_default_optimizer_used(self):
+        model = StreamFunctionPINN(epochs=3, optimizer="adam")
+        x = np.random.random(size=(10, 2))
+        y = np.random.random(size=(10, 2))
+
+        model.fit(x, y)
+
+        assert isinstance(model.opt, tf.keras.optimizers.Adam)
