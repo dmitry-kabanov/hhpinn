@@ -54,6 +54,7 @@ class StreamFunctionPINN:
         return model
 
     def fit(self, x, y):
+        # Preprocess training data.
         if self.preprocessing == "identity":
             xs = x
             ys = y
@@ -65,9 +66,12 @@ class StreamFunctionPINN:
         else:
             raise ValueError("Unknown values for preprocessing")
 
+        # Training data should be `tf.Variable`s, so that the GradientTape
+        # could watch them automatically.
         x_train = tf.Variable(xs, dtype=tf.float32)
         y_train = tf.Variable(ys, dtype=tf.float32)
 
+        # Instantiate model.
         model = self.build_model()
         self.model = model
 
@@ -80,6 +84,7 @@ class StreamFunctionPINN:
             raise ValueError("Unknown value for optimizer")
         self.opt = opt
 
+        # Dictionary for recording training history.
         self.history = {"loss": []}
 
         if self.save_grad_norm:
