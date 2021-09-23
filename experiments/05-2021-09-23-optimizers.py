@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # %% [markdown]
 # # 05-2021-09-23 Optimizers to mitigate vanishing-gradient problem
+#
+# I use here ADAM optimizer to check if it can handle the problem with
+# vanishing gradients.
+# I compare several models which differ only in optimizer: SGD or ADAM and
+# check their prediction abilities.
 
-# %% Imports
+# %% [markdown]
+# ## Imports
 
 # %%
 import argparse
@@ -19,19 +25,23 @@ from hhpinn import StreamFunctionPINN
 from hhpinn.utils import render_figure
 
 
-# %% md
+# %% [markdown]
 # ## Global variables
 
 # %%
 OUTDIR = "_output"
 
 CONFIGS = [
-    [10],
-    [20],
-    [50],
-    [100],
-    [1000],
+    ([10], "sgd"),
+    ([100], "sgd"),
+    ([1000], "sgd"),
+    ([10], "adam"),
+    ([100], "adam"),
+    ([1000], "adam"),
 ]
+
+# Grid size for test data.
+GRID_SIZE = (11, 11)
 
 RESULT_MODEL_TEMPLATE = os.path.join(OUTDIR, "model-{:d}")
 
@@ -58,45 +68,54 @@ except (ImportError, NameError):
 # %% [markdown]
 # ## Load data
 #
-# We use Taylor--Green vortex with 10 measurements and random seed 10.
+# We use Taylor--Green vortex with 10 measurements and random seed 10 for
+# training in the domain $[0; 2\pi]^2$.
+# The test dataset is defined on the uniform grid.
 
 # %%
 ds = hhpinn.datasets.TGV2D()
 train_x, train_u = ds.load_data()
+test_x, test_u = ds.load_data_on_grid(GRID_SIZE)
+
 
 # %%
 models: List[StreamFunctionPINN] = []
 
-# %% md
+# %% [markdown]
 # ## Run
 
-# %% md
-# We train models with increasing number of neurons using ADAM optimizer.
+# %% [markdown]
+# We train models with different configurations: number of neurons and
+# optimizers (SGD or ADAM).
 
 # %%
 if not os.listdir(OUTDIR):
     models = []
-    for i, c in enumerate(CONFIGS):
+    for i, (h, opt) in enumerate(CONFIGS):
         model = StreamFunctionPINN(
-            hidden_layers=c,
+            hidden_layers=h,
             epochs=1000,
             learning_rate=0.01,
             save_grad_norm=True,
-            optimizer="adam",
+            optimizer=opt,
         )
         models.append(model)
         model.fit(train_x, train_u)
         savedir = RESULT_MODEL_TEMPLATE.format(i)
         os.makedirs(savedir)
         model.save(savedir)
+else:
+    print("OUTDIR not empty, skipping computations")
 
-# %% md
+# %% [markdown]
 # ## Processing results
+#
+# ### Preparation for processing
 
 # %%
 # Load models from disk.
 models = []
-for i, c in enumerate(CONFIGS):
+for i, __ in enumerate(CONFIGS):
     m = StreamFunctionPINN.load(
         RESULT_MODEL_TEMPLATE.format(i)
     )
@@ -104,20 +123,24 @@ for i, c in enumerate(CONFIGS):
 
 # %%
 # Define styles
-styles = ["-", "--", "o", "s", "."]
+styles = ["-", "--", "-.", ":", (0, (1, 1)), (0, (5, 5))]
+# Step between epochs for plotting.
+step = 50
+
+# %% [markdown]
+# ### Plot loss history
 
 # %%
-# Plot loss history.
 plt.figure()
 for i, c in enumerate(CONFIGS):
-    plt.plot(
-        range(1, len(models[i].history["loss"])+1, 50),
-        models[i].history["loss"][::50],
-        styles[i],
-        label=c)
+    plt.semilogy(
+        range(1, len(models[i].history["loss"])+1, step),
+        models[i].history["loss"][::step],
+        linestyle=styles[i],
+        label=str(c))
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
-plt.legend(loc="upper right")
+plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
@@ -125,18 +148,20 @@ render_figure(
     save=args["save"]
 )
 
-# %% Plot gradient norms during training.
-step = 50
+# %% [markdown]
+# ### Plot gradient infinity norm during training
+
+# %%
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
         range(1, len(models[i].history["grad_inf_norm"])+1, step),
         models[i].history["grad_inf_norm"][::step],
-        styles[i],
+        linestyle=styles[i],
         label=c)
 plt.xlabel("Epochs")
 plt.ylabel("Gradient Inf norm")
-plt.legend(loc="upper right")
+plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
@@ -144,19 +169,20 @@ render_figure(
     save=args["save"]
 )
 
+# %% [markdown]
+# ### Plot gradient Euclidean norm during training
 
-# %% Plot gradient Euclidean norms during training.
-step = 50
+# %%
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
         range(1, len(models[i].history["grad_l2_norm"])+1, step),
         models[i].history["grad_l2_norm"][::step],
-        styles[i],
+        linestyle=styles[i],
         label=c)
 plt.xlabel("Epochs")
 plt.ylabel("Gradient 2-norm")
-plt.legend(loc="upper right")
+plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
@@ -164,34 +190,61 @@ render_figure(
     save=args["save"]
 )
 
+# %% [markdown]
+# ### Plot predictability of largest models
+# We want to predict the following field:
+
 # %%
-model = models[1]
-
-grid_size = (11, 11)
-test_x, test_u = ds.load_data_on_grid(grid_size)
-pred_u = model.predict(test_x)
-
 hhpinn.plotting.plot_stream_field_2D(
-    grid_size, ds.domain, test_x, test_u
+    GRID_SIZE, ds.domain, test_x, test_u
 )
 
 render_figure(
 )
 
+# %% [markdown]
+# #### SGD and ADAM models, predicted field
+
+# %%
+model_sgd = models[2]
+model_adam = models[5]
+assert model_sgd.hidden_layers == model_adam.hidden_layers
+pred_u_sgd = model_sgd.predict(test_x)
+pred_u_adam = model_adam.predict(test_x)
+
+# %%
 hhpinn.plotting.plot_stream_field_2D(
-    grid_size, ds.domain, test_x, pred_u
+    GRID_SIZE, ds.domain, test_x, pred_u_sgd
 )
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field.pdf"),
+    to_file=os.path.join("_assets", "pred-field-model-sgd.pdf"),
     save=args["save"],
 )
 
-err_u = np.linalg.norm(pred_u - test_u, 2, axis=1)
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, pred_u_adam
+)
 
-xg = test_x[:, 0].reshape(grid_size)
-yg = test_x[:, 1].reshape(grid_size)
-err_ug = err_u.reshape(grid_size)
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-model-adam.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
+# #### Error fields in SGD and ADAM models
+
+# %% [markdown]
+# This is a comparison of the pointwise error fields between a SGD and
+# ADAM-trained models.
+# We can see that the ADAM models is more accurate.
+
+# %%
+err_u = np.linalg.norm(pred_u_sgd - test_u, 2, axis=1)
+
+xg = test_x[:, 0].reshape(GRID_SIZE)
+yg = test_x[:, 1].reshape(GRID_SIZE)
+err_ug = err_u.reshape(GRID_SIZE)
 
 plt.figure()
 plt.pcolormesh(xg, yg, err_ug)
@@ -202,6 +255,25 @@ plt.ylabel(r"$y$")
 plt.tight_layout(pad=0.1)
 
 render_figure(
-    to_file=os.path.join("_assets", "error-field.pdf"),
+    to_file=os.path.join("_assets", "error-field-model=sgd.pdf"),
+    save=args["save"]
+)
+
+err_u = np.linalg.norm(pred_u_adam - test_u, 2, axis=1)
+
+xg = test_x[:, 0].reshape(GRID_SIZE)
+yg = test_x[:, 1].reshape(GRID_SIZE)
+err_ug = err_u.reshape(GRID_SIZE)
+
+plt.figure()
+plt.pcolormesh(xg, yg, err_ug)
+plt.scatter(train_x[:, 0], train_x[:, 1], s=30, c="red")
+plt.colorbar()
+plt.xlabel(r"$x$")
+plt.ylabel(r"$y$")
+plt.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", "error-field-model=adam.pdf"),
     save=args["save"]
 )
