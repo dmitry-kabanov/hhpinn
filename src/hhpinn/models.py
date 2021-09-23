@@ -7,9 +7,9 @@ import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 
 
-class HodgeHelmholtzPINN:
     """Physics-informed neural network for learning fluid flows."""
     def __init__(self, hidden_layers=[10], epochs=50, learning_rate=0.01,
+class StreamFunctionPINN:
                  preprocessing="identity",
                  save_grad_norm=False):
         self.hidden_layers = hidden_layers

@@ -4,4 +4,4 @@ from . import datasets
 from . import models
 from . import plotting
 
-from .models import HodgeHelmholtzPINN
+from .models import StreamFunctionPINN
