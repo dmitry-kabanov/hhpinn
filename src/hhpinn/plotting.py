@@ -4,9 +4,20 @@ import numpy as np
 
 from matplotlib.patches import Circle
 
-plt.style.use("seaborn")
-plt.style.use("seaborn-paper")
-matplotlib.rcParams["figure.figsize"] = (6, 3.7)
+try:
+    from IPython import get_ipython
+    ip = str(get_ipython())
+    if "zmqshell" in ip:
+        plt.style.use("seaborn")
+        plt.style.use("seaborn-notebook")
+    else:
+        plt.style.use("seaborn")
+        plt.style.use("seaborn-notebook")
+except (ImportError, NameError):
+    # Running in console Python
+    plt.style.use("seaborn")
+    plt.style.use("seaborn-paper")
+    matplotlib.rcParams["figure.figsize"] = (6, 3.7)
 
 
 def plot_stream_field_2D(N, domain, x_values, u_values):
