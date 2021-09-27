@@ -6,8 +6,7 @@
 # vanishing gradients.
 # I compare several models which differ only in optimizer: SGD or ADAM and
 # check their prediction abilities.
-
-# %% [markdown]
+#
 # ## Imports
 
 # %%
@@ -83,8 +82,7 @@ models: List[StreamFunctionPINN] = []
 
 # %% [markdown]
 # ## Run
-
-# %% [markdown]
+#
 # We train models with different configurations: number of neurons and
 # optimizers (SGD or ADAM).
 
@@ -97,6 +95,7 @@ if not os.listdir(OUTDIR):
             epochs=1000,
             learning_rate=0.01,
             save_grad_norm=True,
+            save_grad=100,
             optimizer=opt,
         )
         models.append(model)
@@ -214,7 +213,7 @@ pred_u_adam = model_adam.predict(test_x)
 
 # %%
 hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_sgd
+    GRID_SIZE, ds.domain, test_x, pred_u_sgd, test_u
 )
 
 render_figure(
@@ -223,7 +222,7 @@ render_figure(
 )
 
 hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_adam
+    GRID_SIZE, ds.domain, test_x, pred_u_adam, test_u
 )
 
 render_figure(
