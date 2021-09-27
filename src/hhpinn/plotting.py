@@ -19,6 +19,7 @@ except (ImportError, NameError):
     plt.style.use("seaborn-paper")
     matplotlib.rcParams["figure.figsize"] = (6, 3.7)
 
+matplotlib.rcParams['savefig.dpi'] = 300
 
 def plot_stream_field_2D(N, domain, x_values, u_values):
     if len(N) != 2 or len(domain) != 2:
