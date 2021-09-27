@@ -21,7 +21,7 @@ class StreamFunctionPINN:
         self._nparams = 6
 
         self.model = None
-        self.history = None
+        self.history = {}
         self.transformer = None
 
     def get_params(self):
