@@ -11,14 +11,16 @@ class StreamFunctionPINN:
     """Physics-informed neural network for learning 2D fluid flows."""
     def __init__(self, hidden_layers=[10], epochs=50, optimizer="sgd", learning_rate=0.01,
                  preprocessing="identity",
-                 save_grad_norm=False):
+                 save_grad_norm=False,
+                 save_grad: int = 0):
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
-        self._nparams = 6
+        self.save_grad = save_grad
+        self._nparams = 7
 
         self.model = None
         self.history = {}
@@ -32,6 +34,7 @@ class StreamFunctionPINN:
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
             "save_grad_norm": self.save_grad_norm,
+            "save_grad": self.save_grad,
         }
         assert len(params) == self._nparams
 
@@ -91,12 +94,16 @@ class StreamFunctionPINN:
             self.history["grad_inf_norm"] = []
             self.history["grad_l2_norm"] = []
 
+        if self.save_grad:
+            self.history["grad"] = {}
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape:
                 psi = model(x_train)
 
                 # Compute velocity predictions from the stream function `psi`.
                 stream_func_grad = tape.gradient(psi, x_train)
+
                 y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
                 misfit = y_pred - y_train
@@ -116,6 +123,10 @@ class StreamFunctionPINN:
                 self.history["grad_l2_norm"].append(
                     np.linalg.norm(flat_grad, ord=2)
                 )
+
+            if self.save_grad and (((e+1) % self.save_grad == 0) or e == 0):
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad])
+                self.history["grad"][e] = flat_grad
 
     def predict(self, x_new):
         if self.preprocessing == "identity":
