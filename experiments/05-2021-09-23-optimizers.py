@@ -190,6 +190,35 @@ render_figure(
 )
 
 # %% [markdown]
+# ### Plot gradient distributions
+# #### Model [1000], "ADAM"
+
+# %%
+n_model = 5
+model = models[n_model]
+assert model.hidden_layers == [1000]
+assert model.optimizer == "adam"
+
+idx = list(model.history["grad"].keys())
+snapshots = [idx[0], idx[int(len(idx)*0.5)], idx[-1]]
+# snapshots = idx
+fig, axes = plt.subplots(nrows=1, ncols=len(snapshots), sharey=True,
+                         figsize=(24, 3))
+for i, e in enumerate(snapshots):
+    g = model.history["grad"][e]
+    axes[i].hist(g, density=True)
+    axes[i].set_xlabel(r"Gradient components")
+    axes[i].set_xlim((-0.02, 0.02))
+    axes[i].set_title("Epoch %d" % e)
+axes[0].set_ylabel(r"Density")
+fig.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", f"grad-density-model={n_model}.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
 # ### Plot predictability of largest models
 # We want to predict the following field:
 
