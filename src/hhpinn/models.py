@@ -27,6 +27,7 @@ class StreamFunctionPINN:
         self.model = None
         self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
+        self.transformer_output = None
 
     def get_params(self):
         params = {
@@ -68,6 +69,13 @@ class StreamFunctionPINN:
             self.transformer.fit(x)
             xs = self.transformer.transform(x)
             ys = y
+        elif self.preprocessing == "standardization-both":
+            self.transformer = StandardScaler()
+            self.transformer.fit(x)
+            xs = self.transformer.transform(x)
+            self.transformer_output = StandardScaler()
+            self.transformer_output.fit(y)
+            ys = self.transformer_output.transform(y)
         else:
             raise ValueError("Unknown values for preprocessing")
 
@@ -145,7 +153,12 @@ class StreamFunctionPINN:
         stream_func_grad = tape.gradient(psi, x_var)
         y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-        return y_pred.numpy()
+        result = y_pred.numpy()
+
+        if self.preprocessing == "standardization-both":
+            result = self.transformer_output.inverse_transform(result)
+
+        return result
 
     def save(self, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
@@ -165,6 +178,11 @@ class StreamFunctionPINN:
             tfile = os.path.join(dirname, "transformer.pkl")
             with open(tfile, "wb") as fh:
                 pickle.dump(self.transformer, fh)
+
+        if self.transformer_output:
+            tfile = os.path.join(dirname, "transformer_output.pkl")
+            with open(tfile, "wb") as fh:
+                pickle.dump(self.transformer_output, fh)
 
     @classmethod
     def load(cls, dirname):
@@ -188,5 +206,10 @@ class StreamFunctionPINN:
         if os.path.exists(tfile):
             with open(tfile, "rb") as fh:
                 obj.transformer = pickle.load(fh)
+
+        tfile = os.path.join(dirname, "transformer_output.pkl")
+        if os.path.exists(tfile):
+            with open(tfile, "rb") as fh:
+                obj.transformer_output = pickle.load(fh)
 
         return obj
