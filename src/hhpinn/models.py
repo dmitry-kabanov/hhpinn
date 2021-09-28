@@ -4,6 +4,8 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
+from typing import Dict, List, Union
+
 from sklearn.preprocessing import StandardScaler
 
 
@@ -23,7 +25,7 @@ class StreamFunctionPINN:
         self._nparams = 7
 
         self.model = None
-        self.history = {}
+        self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
 
     def get_params(self):
