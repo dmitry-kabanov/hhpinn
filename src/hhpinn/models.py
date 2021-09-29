@@ -10,19 +10,20 @@ from sklearn.preprocessing import StandardScaler
 
 
 class StreamFunctionPINN:
-    """Physics-informed neural network for learning 2D fluid flows."""
-    def __init__(self, hidden_layers=[10], epochs=50, optimizer="sgd", learning_rate=0.01,
+    """Physics-informed neural network for divergence-free 2D vector fields."""
+    def __init__(self, hidden_layers=[10], epochs=50, l2=0.0, optimizer="sgd", learning_rate=0.01,
                  preprocessing="identity",
                  save_grad_norm=False,
                  save_grad: int = 0):
         self.hidden_layers = hidden_layers
         self.epochs = epochs
+        self.l2 = l2
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 7
+        self._nparams = 8
 
         self.model = None
         self.history: Dict[str, Union[Dict, List]] = {}
@@ -33,6 +34,7 @@ class StreamFunctionPINN:
         params = {
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
+            "l2": self.l2,
             "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
@@ -49,11 +51,15 @@ class StreamFunctionPINN:
         x = inp
         for neurons in self.hidden_layers:
             x = tf.keras.layers.Dense(neurons, activation="tanh",
-                                      kernel_initializer="glorot_normal")(x)
+                                      kernel_initializer="glorot_normal",
+                kernel_regularizer=tf.keras.regularizers.l2(l2=self.l2),
+                bias_regularizer=tf.keras.regularizers.l2(l2=self.l2))(x)
 
         out = tf.keras.layers.Dense(1, activation=None,
                                     use_bias=False,
-                                    kernel_initializer="glorot_normal")(x)
+                                    kernel_initializer="glorot_normal",
+            kernel_regularizer=tf.keras.regularizers.l2(l2=self.l2)
+            )(x)
 
         model = tf.keras.models.Model(inputs=inp, outputs=out)
 
