@@ -92,12 +92,14 @@ def plot_error_field_2D(inputs, errors, locs=[], grid_size=None):
     err_ug = errors.reshape(grid_size)
 
     fig = plt.figure()
-    plt.pcolormesh(xg, yg, err_ug)
+    # Use `shading="nearest"` to plot field with the same dimensions
+    # as points `xg` and `yg`.
+    plt.pcolormesh(xg, yg, err_ug, shading="nearest")
     if len(locs):
         plt.scatter(locs[:, 0], locs[:, 1], s=30, c="red")
     plt.colorbar()
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
-    fig.tight_layout(pad=0.1)
+    fig.tight_layout(pad=0.3)
 
     return fig
