@@ -95,9 +95,12 @@ def plot_error_field_2D(inputs, errors, locs=[], grid_size=None):
     # Use `shading="nearest"` to plot field with the same dimensions
     # as points `xg` and `yg`.
     plt.pcolormesh(xg, yg, err_ug, shading="nearest")
+    # It is important that `colorbar` is invoked immediately after
+    # `pcolormesh`, otherwise, the range of the colorbar can be affected
+    # by the following optional plotting of the points `locs`.
+    plt.colorbar()
     if len(locs):
         plt.scatter(locs[:, 0], locs[:, 1], s=30, c="red")
-    plt.colorbar()
     plt.xlabel(r"$x$")
     plt.ylabel(r"$y$")
     fig.tight_layout(pad=0.3)
