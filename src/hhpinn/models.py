@@ -166,6 +166,46 @@ class StreamFunctionPINN:
 
         return result
 
+    def compute_divergence(self, x_new):
+        if self.preprocessing == "identity":
+            x_new_s = x_new
+        else:
+            x_new_s = self.transformer.transform(x_new)
+
+        # We need input as `tf.Variable` to be able to record operations
+        # inside a gradient tape.
+        x_var = tf.Variable(x_new_s, dtype=tf.float32)
+
+        with tf.GradientTape(
+            persistent=True, watch_accessed_variables=False
+        ) as div_tape:
+            div_tape.watch(x_var)
+            with tf.GradientTape(watch_accessed_variables=False) as tape:
+                tape.watch(x_var)
+                psi = self.model(x_var)
+
+            # Compute velocity predictions from the stream function `psi`.
+            stream_func_grad = tape.gradient(psi, x_var)
+            y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+            u, v = tf.split(y_pred, 2, axis=1)
+
+        grad_u = div_tape.gradient(u, x_var)
+        grad_v = div_tape.gradient(v, x_var)
+
+        du_dx = grad_u[:, 0]
+        dv_dy = grad_v[:, 1]
+
+        divergence = du_dx + dv_dy
+
+        result = divergence.numpy()
+
+        del div_tape
+
+        # if self.preprocessing == "standardization-both":
+        #     result = self.transformer_output.inverse_transform(result)
+
+        return result
+
     def save(self, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
         params = self.get_params()
