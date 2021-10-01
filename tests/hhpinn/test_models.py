@@ -171,3 +171,17 @@ class TestStreamFunctionPINN:
         model.fit(x, y)
 
         assert isinstance(model.opt, tf.keras.optimizers.Adam)
+
+    def test_prediction_is_divergence_free(self):
+        model = StreamFunctionPINN(epochs=3, optimizer="adam")
+        x = np.random.random(size=(10, 2))
+        y = np.random.random(size=(10, 2))
+
+        model.fit(x, y)
+
+        x_new = np.random.random(size=(4000, 2))
+        f = model.compute_divergence(x_new)
+
+        assert f.ndim == 1
+        assert f.shape[0] == x_new.shape[0]
+        assert np.linalg.norm(f, np.Inf) <= 1e-7
