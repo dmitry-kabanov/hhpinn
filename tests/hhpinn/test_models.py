@@ -11,9 +11,12 @@ class TestStreamFunctionPINN:
 
         assert sut.hidden_layers == [10]
         assert sut.epochs == 50
+        assert sut.l2 == 0.0
+        assert sut.optimizer == "sgd"
         assert sut.learning_rate == 0.01
         assert sut.preprocessing == "identity"
-        assert sut.optimizer == "sgd"
+        assert sut.save_grad_norm == False
+        assert sut.save_grad == 0
 
     def test_saves_hyperparameters(self):
         HIDDEN_LAYERS = [27, 8, 101]
