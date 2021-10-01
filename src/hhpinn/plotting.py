@@ -78,7 +78,7 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     fig.tight_layout(pad=0.1)
 
 
-def plot_error_field_2D(inputs, errors, locs=[], grid_size=None):
+def plot_error_field_2D(inputs, errors, grid_size, locs=[]):
     assert inputs.ndim == 2
     assert errors.ndim == 1
     assert inputs.shape[1] == 2
