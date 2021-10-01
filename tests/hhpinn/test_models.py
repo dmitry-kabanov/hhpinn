@@ -21,15 +21,31 @@ class TestStreamFunctionPINN:
     def test_saves_hyperparameters(self):
         HIDDEN_LAYERS = [27, 8, 101]
         EPOCHS = 22
+        L2 = 1.27e-3
+        OPTIMIZER = "adam"
         LEARNING_RATE = 0.031
+        PREPROCESSING = "standardization"
+        SAVE_GRAD_NORM = True
+        SAVE_GRAD = 100
 
         sut = StreamFunctionPINN(
-            hidden_layers=HIDDEN_LAYERS, epochs=EPOCHS, learning_rate=LEARNING_RATE
+            hidden_layers=HIDDEN_LAYERS, epochs=EPOCHS,
+            l2=L2,
+            optimizer=OPTIMIZER,
+            learning_rate=LEARNING_RATE,
+            preprocessing=PREPROCESSING,
+            save_grad_norm=SAVE_GRAD_NORM,
+            save_grad=SAVE_GRAD
         )
 
         npt.assert_equal(sut.hidden_layers, HIDDEN_LAYERS)
         npt.assert_equal(sut.epochs, EPOCHS)
+        npt.assert_equal(sut.l2, L2)
+        npt.assert_equal(sut.optimizer, OPTIMIZER)
         npt.assert_equal(sut.learning_rate, LEARNING_RATE)
+        npt.assert_equal(sut.preprocessing, PREPROCESSING)
+        npt.assert_equal(sut.save_grad_norm, SAVE_GRAD_NORM)
+        npt.assert_equal(sut.save_grad, SAVE_GRAD)
 
     def test_linear_model_returns_correct_output(self):
         sut = StreamFunctionPINN(hidden_layers=[], epochs=0)
