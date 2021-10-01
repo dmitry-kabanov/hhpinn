@@ -101,9 +101,12 @@ class TestStreamFunctionPINN:
         assert m1.history == m2.history
 
     def test_save_load_after_training_transformer_is_saved(self, tmpdir):
-        m1 = StreamFunctionPINN(hidden_layers=[10], epochs=5,
-                                learning_rate=0.1,
-                                preprocessing="standardization")
+        m1 = StreamFunctionPINN(
+            hidden_layers=[10],
+            epochs=5,
+            learning_rate=0.1,
+            preprocessing="standardization",
+        )
         m1.fit(np.random.normal(size=(10, 2)), np.random.normal(size=(10, 2)))
 
         m1.save(tmpdir)
@@ -117,9 +120,7 @@ class TestStreamFunctionPINN:
 
     def test_connected_correctly(self):
         # Relatively rigid test to check that MLP network is wired correctly.
-        model = StreamFunctionPINN(
-            hidden_layers=[3]
-        )
+        model = StreamFunctionPINN(hidden_layers=[3])
         nn = model.build_model()
 
         w1 = np.array([[3.0, 4.0], [7.0, 5.0], [1.0, 6.0]]).T
