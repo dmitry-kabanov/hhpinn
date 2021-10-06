@@ -108,6 +108,12 @@ class StreamFunctionPINN:
         model = self.build_model()
         self.model = model
 
+        if self.l2 < 0.0:
+            raise ValueError("Multiplier of L2 regularizer should be non-negative")
+
+        if self.s4 < 0.0:
+            raise ValueError("Muliplier of S4 regularizer should be non-negative")
+
         # Instantiate optimizer.
         if self.optimizer == "sgd":
             opt = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
