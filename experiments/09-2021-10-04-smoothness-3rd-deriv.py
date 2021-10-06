@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # %% [markdown]
-# # 09-2021-10-04 Adding regularizer on third derivatives
+# # 09-2021-10-04 Adding regularizer on fourth derivatives
 #
 # This is to try to prove a hypothesis that adding regularizer on higher-order
 # derivatives will improve predicted fields.
@@ -16,6 +16,7 @@ import numpy as np
 
 import hhpinn
 
+from collections import namedtuple
 from typing import List
 
 from hhpinn import StreamFunctionPINN
@@ -28,15 +29,16 @@ from hhpinn.utils import render_figure
 # %%
 OUTDIR = "_output"
 
-# Configurations of the neural networks: hidden-layers neurons, optimizer,
-# L2 regularizer.
+# Configurations of the neural networks:
+# hidden-layers, optimizer, multiplier of Sobolev4 regularizer.
+Config = namedtuple("Config", ["hl", "opt", "s4"])
 CONFIGS = [
-    ([2000], "adam", 1e-8),
-    ([2000], "adam", 1e-2),
-    ([2000], "adam", 1e-0),
-    ([2000], "adam", 1e+1),
-    ([2000], "adam", 1e+2),
-    ([2000], "adam", 1e+3),
+    Config([2000], "adam", 1e-8),
+    Config([2000], "adam", 1e-2),
+    Config([2000], "adam", 1e-0),
+    Config([2000], "adam", 1e+1),
+    Config([2000], "adam", 1e+2),
+    Config([2000], "adam", 1e+3),
 ]
 
 # Grid size for test data.
@@ -87,15 +89,16 @@ models: List[StreamFunctionPINN] = []
 # %%
 if not os.listdir(OUTDIR):
     models = []
-    for i, (h, opt, l2) in enumerate(CONFIGS):
+    for i, c in enumerate(CONFIGS):
         model = StreamFunctionPINN(
-            hidden_layers=h,
+            hidden_layers=c.hl,
             epochs=1000,
-            l2=l2,
+            l2=0,
+            s4=c.s4,
             learning_rate=0.01,
             save_grad_norm=True,
             save_grad=100,
-            optimizer=opt,
+            optimizer=c.opt,
         )
         models.append(model)
         model.fit(train_x, train_u)
