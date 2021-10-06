@@ -27,6 +27,7 @@ class StreamFunctionPINN:
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.l2 = l2
+        self.s4 = s4
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
