@@ -213,8 +213,10 @@ render_figure(
 # %%
 model_first = models[0]
 model_last = models[-1]
+model_best = models[best_model_idx]
 pred_u_first = model_first.predict(test_x)
 pred_u_last = model_last.predict(test_x)
+pred_u_best = model_best.predict(test_x)
 
 # %%
 hhpinn.plotting.plot_stream_field_2D(
@@ -232,6 +234,15 @@ hhpinn.plotting.plot_stream_field_2D(
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=last.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, pred_u_best, test_u
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-model=best.pdf"),
     save=args["save"],
 )
 
@@ -256,9 +267,18 @@ err_u_last = np.linalg.norm(pred_u_last - test_u, 2, axis=1)
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x)
 
 render_figure(
-    to_file=os.path.join("_assets", "error-field-model=adam.pdf"),
+    to_file=os.path.join("_assets", "error-field-model=last.pdf"),
     save=args["save"]
 )
+
+err_u_best = np.linalg.norm(pred_u_best - test_u, 2, axis=1)
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x)
+
+render_figure(
+    to_file=os.path.join("_assets", "error-field-model=best.pdf"),
+    save=args["save"]
+)
+
 
 # %% [markdown]
 # ## Divergence fields of the first and last models
