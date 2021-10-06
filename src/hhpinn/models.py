@@ -17,6 +17,7 @@ class StreamFunctionPINN:
         hidden_layers=[10],
         epochs=50,
         l2=0.0,
+        s4=0.0,
         optimizer="sgd",
         learning_rate=0.01,
         preprocessing="identity",
@@ -194,7 +195,7 @@ class StreamFunctionPINN:
                     + tf.reduce_sum(grad_d2v_dyy**2, axis=1)
                 )
 
-                loss = tf.reduce_mean(misfit_sq) + 0.001 * tf.reduce_mean(reg_4)
+                loss = tf.reduce_mean(misfit_sq) + self.s4 * tf.reduce_mean(reg_4)
 
             grad = tape_loss.gradient(loss, model.trainable_variables)
             opt.apply_gradients(zip(grad, model.trainable_variables))
