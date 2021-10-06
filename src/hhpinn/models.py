@@ -127,19 +127,76 @@ class StreamFunctionPINN:
             self.history["grad"] = {}
 
         for e in range(self.epochs):
-            with tf.GradientTape(persistent=True) as tape:
-                psi = model(x_train)
+            with tf.GradientTape() as tape_loss:
+                with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t4:
+                    t4.watch(x_train)
+                    with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t3:
+                        t3.watch(x_train)
+                        with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t2:
+                            t2.watch(x_train)
+                            with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t1:
+                                t1.watch(x_train)
+                                psi = model(x_train)
 
-                # Compute velocity predictions from the stream function `psi`.
-                stream_func_grad = tape.gradient(psi, x_train)
+                            # Compute velocity predictions from the stream function `psi`.
+                            stream_func_grad = t1.gradient(psi, x_train)
 
-                y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+                            y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-                misfit = y_pred - y_train
-                misfit_sq = tf.norm(misfit, 2, axis=1) ** 2
-                loss = tf.reduce_mean(misfit_sq)
+                            misfit = y_pred - y_train
+                            misfit_sq = tf.norm(misfit, 2, axis=1) ** 2
+                            u, v = tf.split(y_pred, 2, axis=1)
 
-            grad = tape.gradient(loss, model.trainable_variables)
+                        grad_u = t2.gradient(u, x_train)
+                        grad_v = t2.gradient(v, x_train)
+
+                        du_dx, du_dy = tf.split(grad_u, 2, axis=1)
+                        dv_dx, dv_dy = tf.split(grad_v, 2, axis=1)
+
+                    grad_du_dx = t3.gradient(du_dx, x_train)
+                    grad_du_dy = t3.gradient(du_dy, x_train)
+                    grad_dv_dx = t3.gradient(dv_dx, x_train)
+                    grad_dv_dy = t3.gradient(dv_dy, x_train)
+
+                    d2u_dxx, d2u_dxy = tf.split(grad_du_dx, 2, axis=1)
+                    d2u_dyx, d2u_dyy = tf.split(grad_du_dy, 2, axis=1)
+                    d2v_dxx, d2v_dxy = tf.split(grad_dv_dx, 2, axis=1)
+                    d2v_dyx, d2v_dyy = tf.split(grad_dv_dy, 2, axis=1)
+
+                    # reg_3 = (
+                    #     d2u_dxx ** 2
+                    #     + d2u_dxy ** 2
+                    #     + d2u_dxx ** 2
+                    #     + d2u_dyy ** 2
+                    #     + d2v_dxx ** 2
+                    #     + d2v_dxy ** 2
+                    #     + d2v_dxx ** 2
+                    #     + d2v_dyy ** 2
+                    # )
+
+                grad_d2u_dxx = t4.gradient(d2u_dxx, x_train)
+                grad_d2u_dxy = t4.gradient(d2u_dxy, x_train)
+                grad_d2u_dyx = t4.gradient(d2u_dyx, x_train)
+                grad_d2u_dyy = t4.gradient(d2u_dyy, x_train)
+                grad_d2v_dxx = t4.gradient(d2v_dxx, x_train)
+                grad_d2v_dxy = t4.gradient(d2v_dxy, x_train)
+                grad_d2v_dyx = t4.gradient(d2v_dyx, x_train)
+                grad_d2v_dyy = t4.gradient(d2v_dyy, x_train)
+
+                reg_4 = (
+                    tf.reduce_sum(grad_d2u_dxx**2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dxy**2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dyx**2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dyy**2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dxx**2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dxy**2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dyx**2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dyy**2, axis=1)
+                )
+
+                loss = tf.reduce_mean(misfit_sq) + 0.001 * tf.reduce_mean(reg_4)
+
+            grad = tape_loss.gradient(loss, model.trainable_variables)
             opt.apply_gradients(zip(grad, model.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
