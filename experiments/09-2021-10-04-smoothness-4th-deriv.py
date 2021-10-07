@@ -26,6 +26,7 @@ from typing import List
 
 from hhpinn import StreamFunctionPINN
 from hhpinn.utils import render_figure
+from hhpinn.scoring import rel_pw_error
 
 
 # %% [markdown]
@@ -262,7 +263,7 @@ render_figure(
 # We can see that the ADAM models is more accurate.
 
 # %%
-err_u_first = np.linalg.norm(pred_u_first - test_u, 2, axis=1)
+err_u_first = rel_pw_error(test_u, pred_u_first)
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_first, GRID_SIZE, train_x)
 
 render_figure(
@@ -270,7 +271,7 @@ render_figure(
     save=args["save"]
 )
 
-err_u_last = np.linalg.norm(pred_u_last - test_u, 2, axis=1)
+err_u_last = rel_pw_error(test_u, pred_u_last)
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x)
 
 render_figure(
@@ -278,7 +279,7 @@ render_figure(
     save=args["save"]
 )
 
-err_u_best = np.linalg.norm(pred_u_best - test_u, 2, axis=1)
+err_u_best = rel_pw_error(test_u, pred_u_best)
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x)
 
 render_figure(
