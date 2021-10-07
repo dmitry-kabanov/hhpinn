@@ -30,7 +30,10 @@ def render_figure(fig=None, to_file='figure.pdf', save=False):
         if dirname and not os.path.isdir(dirname):
             os.makedirs(dirname)
 
-        fig.savefig(to_file)
-        logging.info("Save figure to file `%s`" % to_file)
+        try:
+            fig.savefig(to_file)
+            logging.info("Save figure to file `%s`" % to_file)
+        except IOError:
+            logging.warning("Saving figure to file `%s` failed" % to_file)
     else:
         plt.show()
