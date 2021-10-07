@@ -26,7 +26,7 @@ from typing import List
 
 from hhpinn import StreamFunctionPINN
 from hhpinn.utils import render_figure
-from hhpinn.scoring import rel_pw_error
+from hhpinn.scoring import mse, rel_pw_error
 
 
 # %% [markdown]
@@ -197,8 +197,7 @@ print("Mean Squared Errors")
 print("-------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
-    errors = np.linalg.norm(pred - test_u, 2, axis=1)
-    error_mse = np.mean(errors)
+    error_mse = mse(test_u, pred)
     print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
     error_mse_list.append(error_mse)
 
