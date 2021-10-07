@@ -78,7 +78,7 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     fig.tight_layout(pad=0.1)
 
 
-def plot_error_field_2D(inputs, errors, grid_size, locs=[]):
+def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmax=None):
     assert inputs.ndim == 2
     assert errors.ndim == 1
     assert inputs.shape[1] == 2
@@ -91,10 +91,13 @@ def plot_error_field_2D(inputs, errors, grid_size, locs=[]):
     yg = inputs[:, 1].reshape(grid_size)
     err_ug = errors.reshape(grid_size)
 
+    if vmax is None:
+        vmax = np.max(err_ug)
+
     fig = plt.figure()
     # Use `shading="nearest"` to plot field with the same dimensions
     # as points `xg` and `yg`.
-    plt.pcolormesh(xg, yg, err_ug, shading="nearest")
+    plt.pcolormesh(xg, yg, err_ug, shading="nearest", vmax=vmax)
     # It is important that `colorbar` is invoked immediately after
     # `pcolormesh`, otherwise, the range of the colorbar can be affected
     # by the following optional plotting of the points `locs`.

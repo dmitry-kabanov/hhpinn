@@ -269,23 +269,25 @@ render_figure(
 
 # %%
 err_u_first = rel_pw_error(test_u, pred_u_first)
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_first, GRID_SIZE, train_x)
+err_u_last = rel_pw_error(test_u, pred_u_last)
+err_u_best = rel_pw_error(test_u, pred_u_best)
+err_max = np.max((err_u_first, err_u_last, err_u_best))
+
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_first, GRID_SIZE, train_x, vmax=err_max)
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=first.pdf"),
     save=args["save"]
 )
 
-err_u_last = rel_pw_error(test_u, pred_u_last)
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x)
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x, vmax=err_max)
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=last.pdf"),
     save=args["save"]
 )
 
-err_u_best = rel_pw_error(test_u, pred_u_best)
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x)
+hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x, vmax=err_max)
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=best.pdf"),
