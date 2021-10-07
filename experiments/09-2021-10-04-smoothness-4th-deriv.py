@@ -4,7 +4,12 @@
 #
 # This is to try to prove a hypothesis that adding regularizer on higher-order
 # derivatives will improve predicted fields.
-#
+# This paper:
+# Sadati et al. *Hard vs soft constraints in the full field reconstruction of
+# incompressible flow kinematics from noisy scattered velocimetry data*, 2011,
+# proposes to use fourth-order derivative regularizer.
+
+# %% [markdown]
 # ## Imports
 
 # %%
