@@ -39,7 +39,7 @@ OUTDIR = "_output"
 # hidden-layers, optimizer, multiplier of Sobolev4 regularizer.
 Config = namedtuple("Config", ["hl", "opt", "s4"])
 CONFIGS = [
-    Config([2000], "adam", 1e-0),
+    Config([2000], "adam", 0e-0),
     Config([2000], "adam", 1e-6),
     Config([2000], "adam", 1e-4),
     Config([2000], "adam", 1e-3),
@@ -195,11 +195,11 @@ render_figure(
 error_mse_list = []
 print("Mean Squared Errors")
 print("-------------------")
-for c, model in zip(CONFIGS, models):
+for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
     errors = np.linalg.norm(pred - test_u, 2, axis=1)
     error_mse = np.mean(errors)
-    print("Model {:44s} {:.2e}".format(str(c), error_mse))
+    print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
     error_mse_list.append(error_mse)
 
 plt.figure()
@@ -208,6 +208,7 @@ plt.xlabel("Model index")
 plt.ylabel("Prediction MSE")
 plt.tight_layout(pad=0.1)
 best_model_idx = np.argmin(error_mse_list)
+print()
 print("Best model index: ", best_model_idx)
 
 render_figure(
