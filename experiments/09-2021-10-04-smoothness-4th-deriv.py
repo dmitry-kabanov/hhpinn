@@ -216,7 +216,13 @@ render_figure(
 )
 
 # %% [markdown]
-# ## Predicted fields of the first and last models
+# The problem with the above results is that they are a bit random as they
+# change from one run to another due to randomness in simulations:
+# all models are initialized randomly and randomness is different for each
+# model.
+
+# %% [markdown]
+# ## Predicted fields of the first, last, and best models
 
 # %%
 model_first = models[0]
@@ -255,12 +261,11 @@ render_figure(
 )
 
 # %% [markdown]
-# ## Error fields of the first and last models
+# ## Error fields of the first, last, and best models
 
 # %% [markdown]
-# This is a comparison of the pointwise error fields between a SGD and
-# ADAM-trained models.
-# We can see that the ADAM models is more accurate.
+# This is a comparison of the pointwise error fields between
+# different models.
 
 # %%
 err_u_first = rel_pw_error(test_u, pred_u_first)
@@ -290,6 +295,10 @@ render_figure(
 
 # %% [markdown]
 # ## Divergence fields of the first and last models
+#
+# Sanity checks that the neural networks construct divergence-free fields.
+# Computations are done in single-precision, which has a machine epsilon of
+# $1.19 \times 10^{-7}$.
 
 # %%
 div_field_first = model_first.compute_divergence(test_x)
