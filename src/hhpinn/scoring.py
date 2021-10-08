@@ -1,9 +1,17 @@
 """Functions that can are used to compute performance scores."""
+import logging
+
 import numpy as np
+
+
+logger = logging.getLogger()
 
 
 def mse(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     r"""Return mean squared error."""
+    if y_true.shape != y_pred.shape:
+        logger.warning("`y_true` and `y_pred` have different shapes")
+
     errors = np.linalg.norm(y_true - y_pred, 2, axis=1)
     assert len(errors) == len(y_true)
     error_mse = np.mean(errors)
