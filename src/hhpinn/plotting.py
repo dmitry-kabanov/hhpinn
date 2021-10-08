@@ -2,8 +2,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from matplotlib.patches import Circle
-
 try:
     from IPython import get_ipython
     ip = str(get_ipython())
@@ -18,8 +16,6 @@ except (ImportError, NameError):
     plt.style.use("seaborn")
     plt.style.use("seaborn-paper")
     matplotlib.rcParams["figure.figsize"] = (6, 3.7)
-
-matplotlib.rcParams['savefig.dpi'] = 300
 
 
 def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
