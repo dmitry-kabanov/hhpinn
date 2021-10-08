@@ -114,7 +114,7 @@ if not os.listdir(OUTDIR):
         os.makedirs(savedir)
         model.save(savedir)
     end = time.time()
-    print("Computation time: {end-start} sec")
+    print(f"Computation time: {end-start:.2f} sec")
 else:
     print("OUTDIR not empty, skipping computations")
 
