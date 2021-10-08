@@ -15,6 +15,7 @@
 # %%
 import argparse
 import os
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -94,6 +95,7 @@ models: List[StreamFunctionPINN] = []
 # We train models with different configurations (see `CONFIGS`).
 # %%
 if not os.listdir(OUTDIR):
+    start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
         model = StreamFunctionPINN(
@@ -111,6 +113,8 @@ if not os.listdir(OUTDIR):
         savedir = RESULT_MODEL_TEMPLATE.format(i)
         os.makedirs(savedir)
         model.save(savedir)
+    end = time.time()
+    print("Computation time: {end-start} sec")
 else:
     print("OUTDIR not empty, skipping computations")
 
