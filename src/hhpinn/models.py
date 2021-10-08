@@ -8,6 +8,8 @@ from typing import Dict, List, Union
 
 from sklearn.preprocessing import StandardScaler
 
+from hhpinn.scoring import mse
+
 
 class StreamFunctionPINN:
     """Physics-informed neural network for divergence-free 2D vector fields."""
@@ -80,7 +82,7 @@ class StreamFunctionPINN:
 
         return model
 
-    def fit(self, x, y):
+    def fit(self, x, y, validation_data=None):
         # Preprocess training data.
         if self.preprocessing == "identity":
             xs = x
@@ -133,6 +135,9 @@ class StreamFunctionPINN:
 
         if self.save_grad:
             self.history["grad"] = {}
+
+        if validation_data:
+            self.history["val_loss"] = []
 
         for e in range(self.epochs):
             with tf.GradientTape() as tape_loss:
@@ -219,6 +224,11 @@ class StreamFunctionPINN:
             if self.save_grad and (((e + 1) % self.save_grad == 0) or e == 0):
                 flat_grad = np.concatenate([g.numpy().ravel() for g in grad])
                 self.history["grad"][e] = flat_grad
+
+            if validation_data:
+                val_pred = self.predict(validation_data[0])
+                val_loss = mse(validation_data[1], val_pred)
+                self.history["val_loss"].append(val_loss)
 
     def predict(self, x_new):
         if self.preprocessing == "identity":
