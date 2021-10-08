@@ -158,6 +158,28 @@ render_figure(
 )
 
 # %% [markdown]
+# ## Plot validation loss history
+
+# %%
+plt.figure()
+for i, c in enumerate(CONFIGS):
+    plt.semilogy(
+        range(1, len(models[i].history["val_loss"])+1, step),
+        models[i].history["val_loss"][::step],
+        linestyle=styles[i],
+        label=str(c))
+plt.xlabel("Epochs")
+plt.ylabel("Validation loss")
+plt.legend(loc="upper left")
+plt.tight_layout(pad=0.3)
+
+render_figure(
+    to_file=os.path.join("_assets", "val-loss-history.pdf"),
+    save=args["save"]
+)
+
+
+# %% [markdown]
 # ## Plot gradient infinity norm during training
 
 # %%
