@@ -130,7 +130,7 @@ for i, __ in enumerate(CONFIGS):
 # Define styles
 styles = ["-", "--", "-.", ":", (0, (1, 1)), (0, (5, 5))]
 # Step between epochs for plotting.
-step = 50
+step = 1
 
 # %% [markdown]
 # ## Plot loss history
