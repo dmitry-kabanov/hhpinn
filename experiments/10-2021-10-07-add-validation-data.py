@@ -221,11 +221,14 @@ render_figure(
 
 # %%
 error_mse_list = []
-print("Mean Squared Errors")
-print("-------------------")
+print("Mean squared errors on test dataset")
+print("-----------------------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
     error_mse = mse(test_u, pred)
+    # Sanity check that the validation loss at the end of training
+    # is the same as prediction MSE here because I use the same data.
+    assert error_mse == model.history["val_loss"][-1]
     print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
     error_mse_list.append(error_mse)
 
