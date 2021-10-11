@@ -1,6 +1,12 @@
+import logging
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
+
 
 try:
     from IPython import get_ipython
@@ -74,7 +80,7 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     fig.tight_layout(pad=0.1)
 
 
-def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmax=None):
+def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None, vmax=None):
     assert inputs.ndim == 2
     assert errors.ndim == 1
     assert inputs.shape[1] == 2
@@ -87,13 +93,24 @@ def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmax=None):
     yg = inputs[:, 1].reshape(grid_size)
     err_ug = errors.reshape(grid_size)
 
+    if vmin is None:
+        vmin = np.min(err_ug)
+
     if vmax is None:
         vmax = np.max(err_ug)
+
+    if np.any(errors < vmin):
+        # Some values in the `errors` array are lower than the argument `vmin`.
+        logger.warning("Truncation of values due to `vmin`")
+
+    if np.any(errors > vmax):
+        # Some values in the `errors` array are lower than the argument `vmin`.
+        logger.warning("Truncation of values due to `vmax`")
 
     fig = plt.figure()
     # Use `shading="nearest"` to plot field with the same dimensions
     # as points `xg` and `yg`.
-    plt.pcolormesh(xg, yg, err_ug, shading="nearest", vmax=vmax)
+    plt.pcolormesh(xg, yg, err_ug, shading="nearest", vmin=vmin, vmax=vmax)
     # It is important that `colorbar` is invoked immediately after
     # `pcolormesh`, otherwise, the range of the colorbar can be affected
     # by the following optional plotting of the points `locs`.
