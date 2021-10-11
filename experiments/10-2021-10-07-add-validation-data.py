@@ -93,6 +93,8 @@ models: List[StreamFunctionPINN] = []
 # ## Run
 #
 # We train models with different configurations (see `CONFIGS`).
+# Note that if number of epochs 10000, then the computation time will be about
+# 11000 sec, that is, three hours.
 # %%
 if not os.listdir(OUTDIR):
     start = time.time()
@@ -100,10 +102,10 @@ if not os.listdir(OUTDIR):
     for i, c in enumerate(CONFIGS):
         model = StreamFunctionPINN(
             hidden_layers=c.hl,
-            epochs=1000,
+            epochs=10000,
             l2=0,
             s4=c.s4,
-            learning_rate=0.01,
+            learning_rate=0.001,
             save_grad_norm=True,
             save_grad=100,
             optimizer=c.opt,
