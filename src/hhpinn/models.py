@@ -107,6 +107,9 @@ class StreamFunctionPINN:
         x_train = tf.Variable(xs, dtype=tf.float32)
         y_train = tf.Variable(ys, dtype=tf.float32)
 
+        xmin = (xs[:, 0].min(), xs[:, 1].min())
+        xmax = (xs[:, 0].max(), xs[:, 1].max())
+
         # Instantiate model.
         model = self.build_model()
         self.model = model
@@ -127,7 +130,7 @@ class StreamFunctionPINN:
         self.opt = opt
 
         # Dictionary for recording training history.
-        self.history = {"loss": []}
+        self.history = {"loss": [], "misfit": [], "sobolev4": []}
 
         if self.save_grad_norm:
             self.history["grad_inf_norm"] = []
@@ -151,8 +154,10 @@ class StreamFunctionPINN:
                 y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
                 misfit = tf.norm(y_pred - y_train, 2, axis=1) ** 2
 
+                xmin = (0.0, 0.0)
+                xmax = (2*np.pi, 2*np.pi)
                 x_colloc = tf.Variable(
-                    np.random.uniform(-2*np.pi, 2*np.pi, size=(256, 2)), dtype=tf.float32, trainable=False
+                    np.random.uniform(xmin, xmax, size=(256, 2)), dtype=tf.float32, trainable=False
                 )
 
                 with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t4:
@@ -224,6 +229,8 @@ class StreamFunctionPINN:
             opt.apply_gradients(zip(grad, model.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
+            self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
+            self.history["sobolev4"].append(tf.reduce_mean(reg_4).numpy())
 
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
