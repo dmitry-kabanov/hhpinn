@@ -107,6 +107,9 @@ class StreamFunctionPINN:
         x_train = tf.Variable(xs, dtype=tf.float32)
         y_train = tf.Variable(ys, dtype=tf.float32)
 
+        xmin = (xs[:, 0].min(), xs[:, 1].min())
+        xmax = (xs[:, 0].max(), xs[:, 1].max())
+
         # Instantiate model.
         model = self.build_model()
         self.model = model
@@ -151,8 +154,10 @@ class StreamFunctionPINN:
                 y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
                 misfit = tf.norm(y_pred - y_train, 2, axis=1) ** 2
 
+                xmin = (0.0, 0.0)
+                xmax = (2*np.pi, 2*np.pi)
                 x_colloc = tf.Variable(
-                    np.random.uniform(-2*np.pi, 2*np.pi, size=(256, 2)), dtype=tf.float32, trainable=False
+                    np.random.uniform(xmin, xmax, size=(256, 2)), dtype=tf.float32, trainable=False
                 )
 
                 with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t4:
