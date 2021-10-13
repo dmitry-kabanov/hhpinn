@@ -89,8 +89,6 @@ models: List[StreamFunctionPINN] = []
 # ## Run
 #
 # We train models with different configurations (see `CONFIGS`).
-# Note that if number of epochs 10000, then the computation time will be about
-# 17'000 sec, that is, three hours.
 # %%
 if not os.listdir(OUTDIR):
     start = time.time()
@@ -101,10 +99,10 @@ if not os.listdir(OUTDIR):
             epochs=300,
             l2=0,
             s4=c.s4,
+            optimizer=c.opt,
             learning_rate=0.1,
             save_grad_norm=True,
             save_grad=100,
-            optimizer=c.opt,
         )
         models.append(model)
         model.fit(train_x, train_u, validation_data=(test_x, test_u))
@@ -154,6 +152,32 @@ render_figure(
     to_file=os.path.join("_assets", "loss-history.pdf"),
     save=args["save"]
 )
+
+# %%
+plt.figure()
+for i, c in enumerate(CONFIGS):
+    plt.semilogy(
+        range(1, len(models[i].history["misfit"])+1, step),
+        models[i].history["misfit"][::step],
+        linestyle=styles[i],
+        label=str(c))
+plt.xlabel("Epochs")
+plt.ylabel("Misfit loss")
+plt.legend(loc="lower left")
+plt.tight_layout(pad=0.3)
+
+# %%
+plt.figure()
+for i, c in enumerate(CONFIGS):
+    plt.semilogy(
+        range(1, len(models[i].history["sobolev4"])+1, step),
+        models[i].history["sobolev4"][::step],
+        linestyle=styles[i],
+        label=str(c))
+plt.xlabel("Epochs")
+plt.ylabel("Sobolev4 loss")
+plt.legend(loc="lower left")
+plt.tight_layout(pad=0.3)
 
 # %% [markdown]
 # ## Plot validation loss history
