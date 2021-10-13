@@ -127,7 +127,7 @@ class StreamFunctionPINN:
         self.opt = opt
 
         # Dictionary for recording training history.
-        self.history = {"loss": []}
+        self.history = {"loss": [], "misfit": [], "sobolev4": []}
 
         if self.save_grad_norm:
             self.history["grad_inf_norm"] = []
@@ -224,6 +224,8 @@ class StreamFunctionPINN:
             opt.apply_gradients(zip(grad, model.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
+            self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
+            self.history["sobolev4"].append(tf.reduce_mean(reg_4).numpy())
 
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
