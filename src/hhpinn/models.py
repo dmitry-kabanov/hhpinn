@@ -35,7 +35,7 @@ class StreamFunctionPINN:
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 8
+        self._nparams = 9
 
         self.model = None
         self.history: Dict[str, Union[Dict, List]] = {}
@@ -53,7 +53,6 @@ class StreamFunctionPINN:
             "preprocessing": self.preprocessing,
             "save_grad_norm": self.save_grad_norm,
             "save_grad": self.save_grad,
-            "lr_scheduling": self.lr_scheduling,
         }
         assert len(params) == self._nparams
 
