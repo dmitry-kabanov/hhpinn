@@ -1,9 +1,13 @@
 # %% [markdown]
-# # 12-2021-10-11 Add Sobolev4 regularizer at collocation points
+# # 13-2021-10-11 Optimization parameters like wind NN
 #
-# I have added before Sobolev4 regularizer at the same points where
-# the measurements are evaluated.
-# Here I change this regularizer to use independently sampled points.
+# I had better experience with the preidcitons via wind NN in Februrary 2021.
+# Here I change the parameters of training to match as close as possible
+# the parameters used then.
+# Training parameters are infeasible to make identical for the following
+# reasons. 1) I use full batch optimizer now instead of mini-batch GD,
+# 2) the collocation points are random here but there were defined on a uniform
+# grid for the wind NN.
 
 # %% [markdown]
 # ## Imports
