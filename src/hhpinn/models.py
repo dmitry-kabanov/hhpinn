@@ -47,11 +47,13 @@ class StreamFunctionPINN:
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
             "l2": self.l2,
+            "s4": self.s4,
             "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
             "save_grad_norm": self.save_grad_norm,
             "save_grad": self.save_grad,
+            "lr_scheduling": self.lr_scheduling,
         }
         assert len(params) == self._nparams
 
