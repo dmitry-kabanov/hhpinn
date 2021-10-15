@@ -21,7 +21,7 @@ import hhpinn
 from collections import namedtuple
 from typing import List
 
-from hhpinn import StreamFunctionPINN
+from hhpinn import HHPINN2D
 from hhpinn.utils import render_figure
 from hhpinn.scoring import mse, rel_mse, rel_pw_error
 
@@ -77,13 +77,13 @@ except (ImportError, NameError):
 # The test dataset is defined on the uniform grid.
 
 # %%
-ds = hhpinn.datasets.TGV2D(N=10)
+ds = hhpinn.datasets.TGV2DPlusPotentialPart(N=50)
 train_x, train_u = ds.load_data()
 test_x, test_u = ds.load_data_on_grid(GRID_SIZE)
 
 
 # %%
-models: List[StreamFunctionPINN] = []
+models: List[HHPINN2D] = []
 
 # %% [markdown]
 # ## Run
@@ -102,7 +102,7 @@ if not os.listdir(OUTDIR):
     start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
-        model = StreamFunctionPINN(
+        model = HHPINN2D(
             hidden_layers=c.hl,
             epochs=300,
             l2=0,
@@ -129,7 +129,7 @@ else:
 # Load models from disk.
 models = []
 for i, __ in enumerate(CONFIGS):
-    m = StreamFunctionPINN.load(
+    m = HHPINN2D.load(
         RESULT_MODEL_TEMPLATE.format(i)
     )
     models.append(m)
