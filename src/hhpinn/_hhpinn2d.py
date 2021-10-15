@@ -274,14 +274,16 @@ class HHPINN2D:
             x_new_s = self.transformer.transform(x_new)
 
         x_var = tf.Variable(x_new_s, dtype=tf.float32)
-        with tf.GradientTape(watch_accessed_variables=False) as tape:
+        with tf.GradientTape(persistent=True, watch_accessed_variables=False) as tape:
             tape.watch(x_var)
-            psi = self.model(x_var)
+            phi = self.model_phi(x_var)
+            psi = self.model_psi(x_var)
 
-        # Compute velocity predictions from the stream function `psi`.
+        curl_free_part = tape.gradient(phi, x_var)
         stream_func_grad = tape.gradient(psi, x_var)
-        y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+        div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
+        y_pred = curl_free_part + div_free_part
         result = y_pred.numpy()
 
         if self.preprocessing == "standardization-both":
