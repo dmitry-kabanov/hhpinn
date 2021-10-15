@@ -305,7 +305,7 @@ class HHPINN2D:
             div_tape.watch(x_var)
             with tf.GradientTape(watch_accessed_variables=False) as tape:
                 tape.watch(x_var)
-                psi = self.model(x_var)
+                psi = self.model_psi(x_var)
 
             # Compute velocity predictions from the stream function `psi`.
             stream_func_grad = tape.gradient(psi, x_var)
