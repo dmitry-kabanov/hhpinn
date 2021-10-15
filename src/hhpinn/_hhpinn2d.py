@@ -118,11 +118,11 @@ class HHPINN2D:
         xmin = (xs[:, 0].min(), xs[:, 1].min())
         xmax = (xs[:, 0].max(), xs[:, 1].max())
 
-        # Instantiate model.
-        model_psi = self.build_model()
-        self.model_psi = model_psi
+        # Instantiate models.
         model_phi = self.build_model()
         self.model_phi = model_phi
+        model_psi = self.build_model()
+        self.model_psi = model_psi
 
         if self.l2 < 0.0:
             raise ValueError("Multiplier of L2 regularizer should be non-negative")
@@ -156,15 +156,18 @@ class HHPINN2D:
             with tf.GradientTape() as tape_loss:
                 with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t1:
                     t1.watch(x_train)
-                    psi = model_psi(x_train)
                     phi = model_phi(x_train)
+                    psi = model_psi(x_train)
+
+                # Potential (curl-free part) is a gradient of scalar-valued
+                # function phi.
+                curl_free_part = t1.gradient(phi, x_train)
 
                 # Divergence-free part in 2D is defined by stream function:
                 # u = ∂psi_∂y, v = -∂psi_∂x.
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-                curl_free_part = t1.gradient(phi, x_train)
                 u_pred = div_free_part + curl_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
