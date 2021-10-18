@@ -159,9 +159,7 @@ class TGV2DPlusTrigonometricFlow:
                 x = np.asarray([X_grid[j, i], Y_grid[j, i]])
                 curl_free_result[:, j, i] = self._curl_free(x)
                 div_free_result[:, j, i] = self._vortex(x)
-                result[:, j, i] = (
-                    curl_free_result[:, j, i] + div_free_result[:, j, i]
-                )
+                result[:, j, i] = curl_free_result[:, j, i] + div_free_result[:, j, i]
 
         return result, curl_free_result, div_free_result
 
