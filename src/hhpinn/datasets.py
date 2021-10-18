@@ -74,8 +74,11 @@ class TGV2D:
         return np.asarray([np.cos(x[0]) * np.sin(x[1]), -np.sin(x[0]) * np.cos(x[1])])
 
 
-class TGV2DPlusPotentialPart:
-    """Dataset based on Taylor--Green 2D vortex data plus potential flow
+class TGV2DPlusTrigonometricFlow:
+    """Dataset based on Taylor--Green 2D vortex data plus trigonometric flow.
+
+    Taylor-Green 2D vortex gives divergence-free (solenoidal) part of the flow
+    while trigonometric part gives curl-free (potential) part of the flow.
 
     Parameters
     ----------
@@ -94,7 +97,9 @@ class TGV2DPlusPotentialPart:
         self.domain = domain
         self.random_seed = random_seed
 
-    def load_data(self) -> Tuple[np.ndarray, np.ndarray]:
+        self.factor = 0.5  # Multiplier of the curl_free field.
+
+    def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Choose randomly `self.N` location points and generate data."""
         np.random.seed(self.random_seed)
 
@@ -103,12 +108,18 @@ class TGV2DPlusPotentialPart:
 
         xP = np.random.random_sample((N, 2)) * domain
         uP = np.zeros((N, 2))
+        curl_free_uP = np.zeros((N, 2))
+        div_free_uP = np.zeros((N, 2))
         for i in range(N):
-            uP[i] = self._vortex(xP[i]) + self._curl_free(xP[i])
+            div_free_uP[i] = self._vortex(xP[i])
+            curl_free_uP[i] = self._curl_free(xP[i])
+            uP[i] = curl_free_uP[i] + div_free_uP[i]
 
-        return xP, uP
+        return xP, uP, curl_free_uP, div_free_uP
 
-    def load_data_on_grid(self, grid_size=(11, 11)) -> Tuple[np.ndarray, np.ndarray]:
+    def load_data_on_grid(
+        self, grid_size=(11, 11)
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Returns data in sklearn format `(X, y)` generated on the uniform grid."""
         # Note that in the `np.mgrid` notation a:b:n*1j means "create n points
         # between `a` and `b` with `b` inclusive".
@@ -117,7 +128,7 @@ class TGV2DPlusPotentialPart:
             0.0 : D[1] : grid_size[1] * 1j, 0.0 : D[0] : grid_size[0] * 1j
         ]
 
-        result = self.eval_on_grid(Xg, Yg)
+        result, curl_free_result, div_free_result = self.eval_on_grid(Xg, Yg)
 
         X_col = Xg.flatten()[:, None]
         Y_col = Yg.flatten()[:, None]
@@ -128,26 +139,41 @@ class TGV2DPlusPotentialPart:
         v = result[1].flatten()[:, None]
         y = np.hstack((u, v))
 
-        return X, y
+        cfu = curl_free_result[0].flatten()[:, None]
+        cfv = curl_free_result[1].flatten()[:, None]
+        cfy = np.hstack((cfu, cfv))
+
+        dfu = div_free_result[0].flatten()[:, None]
+        dfv = div_free_result[1].flatten()[:, None]
+        dfy = np.hstack((dfu, dfv))
+
+        return X, y, cfy, dfy
 
     def eval_on_grid(self, X_grid, Y_grid):
         """Evaluate vortex data on the grid (`X_grid`, `Y_grid`)."""
         result = np.zeros((2,) + X_grid.shape, dtype=float)
+        curl_free_result = np.zeros((2,) + X_grid.shape, dtype=float)
+        div_free_result = np.zeros((2,) + X_grid.shape, dtype=float)
         for j in range(X_grid.shape[0]):
             for i in range(X_grid.shape[1]):
                 x = np.asarray([X_grid[j, i], Y_grid[j, i]])
-                result[:, j, i] = self._vortex(x)
-        return result
+                curl_free_result[:, j, i] = self._curl_free(x)
+                div_free_result[:, j, i] = self._vortex(x)
+                result[:, j, i] = (
+                    curl_free_result[:, j, i] + div_free_result[:, j, i]
+                )
 
-    def _vortex(self, x):
-        """Compute vortex field value at point `x`."""
-        return np.asarray([np.cos(x[0]) * np.sin(x[1]), -np.sin(x[0]) * np.cos(x[1])])
+        return result, curl_free_result, div_free_result
 
     def _curl_free(self, x):
         """Compute potential flow at point `x`."""
-        return np.asarray(
+        return self.factor * np.asarray(
             [
                 -2 * np.sin(2 * x[0]) * np.cos(3 * x[1]),
                 -3 * np.cos(2 * x[0]) * np.sin(3 * x[1]),
             ]
         )
+
+    def _vortex(self, x):
+        """Compute vortex field value at point `x`."""
+        return np.asarray([np.cos(x[0]) * np.sin(x[1]), -np.sin(x[0]) * np.cos(x[1])])
