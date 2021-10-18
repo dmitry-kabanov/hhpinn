@@ -1,8 +1,8 @@
 # %% [markdown]
 # # 15-2021-10-15 HHPINN2D
 #
-# I implement a neural network for Helmholtz decomposition of two-dimensional
-# vector fields here.
+# I implement a neural network for Helmholtz-Hodge decomposition
+# of two-dimensional vector fields here.
 
 # %% [markdown]
 # ## Imports
@@ -77,9 +77,9 @@ except (ImportError, NameError):
 # The test dataset is defined on the uniform grid.
 
 # %%
-ds = hhpinn.datasets.TGV2DPlusPotentialPart(N=50)
-train_x, train_u = ds.load_data()
-test_x, test_u = ds.load_data_on_grid(GRID_SIZE)
+ds = hhpinn.datasets.TGV2DPlusTrigonometricFlow(N=200)
+train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data()
+test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(GRID_SIZE)
 
 
 # %%
@@ -97,7 +97,7 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 300], [0.1, 0.01, 0.001]
+        [200, 500], [0.1, 0.01, 0.001]
     )
     start = time.time()
     models = []
@@ -241,6 +241,24 @@ hhpinn.plotting.plot_stream_field_2D(
 
 render_figure(
     to_file=os.path.join("_assets", "true-field.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, test_u_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "true-field-curl-free-part.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, test_u_div_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "true-field-div-free-part.pdf"),
     save=args["save"],
 )
 
