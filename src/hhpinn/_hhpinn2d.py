@@ -143,11 +143,12 @@ class HHPINN2D:
         self.history = {"loss": [], "misfit": [], "sobolev4": []}
 
         if self.save_grad_norm:
-            self.history["grad_inf_norm"] = []
-            self.history["grad_l2_norm"] = []
+            self.history["grad_phi_inf_norm"] = []
+            self.history["grad_psi_inf_norm"] = []
 
         if self.save_grad:
-            self.history["grad"] = {}
+            self.history["grad_phi"] = {}
+            self.history["grad_psi"] = {}
 
         if validation_data:
             self.history["val_loss"] = []
@@ -267,15 +268,20 @@ class HHPINN2D:
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
             if self.save_grad_norm:
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad])
-                self.history["grad_inf_norm"].append(
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
+                self.history["grad_phi_inf_norm"].append(
                     np.linalg.norm(flat_grad, ord=np.inf)
                 )
-                self.history["grad_l2_norm"].append(np.linalg.norm(flat_grad, ord=2))
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
+                self.history["grad_psi_inf_norm"].append(
+                    np.linalg.norm(flat_grad, ord=np.inf)
+                )
 
             if self.save_grad and (((e + 1) % self.save_grad == 0) or e == 0):
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad])
-                self.history["grad"][e] = flat_grad
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
+                self.history["grad_phi"][e] = flat_grad
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
+                self.history["grad_psi"][e] = flat_grad
 
             if validation_data:
                 val_pred = self.predict(validation_data[0])
