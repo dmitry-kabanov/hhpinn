@@ -242,8 +242,11 @@ class HHPINN2D:
 
                 loss = tf.reduce_mean(misfit) + self.s4 * tf.reduce_mean(reg_4)
 
-            grad = tape_loss.gradient(loss, model_psi.trainable_variables)
-            opt.apply_gradients(zip(grad, model_psi.trainable_variables))
+            grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
+            opt.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
+
+            grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
+            opt.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
             self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
