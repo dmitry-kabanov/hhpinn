@@ -288,7 +288,7 @@ class HHPINN2D:
                 val_loss = mse(validation_data[1], val_pred)
                 self.history["val_loss"].append(val_loss)
 
-    def predict(self, x_new):
+    def predict(self, x_new, return_separate_fields=False):
         if self.preprocessing == "identity":
             x_new_s = x_new
         else:
@@ -311,7 +311,10 @@ class HHPINN2D:
             raise ValueError("This is buggy, not completely implemented")
             result = self.transformer_output.inverse_transform(result)
 
-        return result
+        if return_separate_fields:
+            return result, curl_free_part.numpy(), div_free_part.numpy()
+        else:
+            return result
 
     def compute_divergence(self, x_new):
         if self.preprocessing == "identity":
