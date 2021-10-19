@@ -230,20 +230,6 @@ render_figure(
     save=args["save"]
 )
 
-# %% [markdown]
-# ## True field
-# We want to predict the following fields (combined, curl-free, div-free):
-
-# %%
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, test_u
-)
-
-render_figure(
-    to_file=os.path.join("_assets", "true-field.pdf"),
-    save=args["save"],
-)
-
 hhpinn.plotting.plot_stream_field_2D(
     GRID_SIZE, ds.domain, test_x, test_u_curl_free
 )
@@ -297,6 +283,21 @@ render_figure(
 # change from one run to another due to randomness in simulations:
 # all models are initialized randomly and randomness is different for each
 # model.
+# My observation is that the best coefficient with Sobolev4 regularizer
+# for the solenoidal part is equal to 1e-4 or 1e-3 in all runs.
+
+# %% [markdown]
+# ## True full field
+
+# %%
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, test_u
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "true-field.pdf"),
+    save=args["save"],
+)
 
 # %% [markdown]
 # ## Predicted fields of the first, last, and best models
