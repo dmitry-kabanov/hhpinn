@@ -154,7 +154,7 @@ class HHPINN2D:
             self.history["val_loss"] = []
 
         for e in range(self.epochs):
-            with tf.GradientTape() as tape_loss:
+            with tf.GradientTape(persistent=True) as tape_loss:
                 with tf.GradientTape(
                     persistent=True, watch_accessed_variables=False
                 ) as t1:
