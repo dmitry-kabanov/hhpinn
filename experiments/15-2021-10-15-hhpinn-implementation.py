@@ -97,14 +97,14 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 500], [0.1, 0.01, 0.001]
+        [200, 800, 1500], [0.1, 0.05, 0.01, 0.001]
     )
     start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=300,
+            epochs=2000,
             l2=0,
             s4=c.s4,
             optimizer=c.opt,
@@ -232,7 +232,7 @@ render_figure(
 
 # %% [markdown]
 # ## True field
-# We want to predict the following field:
+# We want to predict the following fields (combined, curl-free, div-free):
 
 # %%
 hhpinn.plotting.plot_stream_field_2D(
@@ -367,7 +367,8 @@ render_figure(
 )
 
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max, cbar_label="%")
+                                    vmin=0.0, vmax=err_max,
+                                    cbar_label="Fraction")
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=best.pdf"),
