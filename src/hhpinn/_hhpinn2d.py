@@ -12,7 +12,7 @@ from hhpinn.scoring import mse
 
 
 class HHPINN2D:
-    """Neural network for Hodge--Helmholtz (HH) decomposition of 2D vector fields.
+    """Neural network for Helmholtz--Hodge (HH) decomposition of 2D vector fields.
 
     This physics-informed neural network (PINN) learns from given
     vector dataset R^2 \to R^2 two networks that represent potential and
@@ -154,7 +154,9 @@ class HHPINN2D:
 
         for e in range(self.epochs):
             with tf.GradientTape() as tape_loss:
-                with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t1:
+                with tf.GradientTape(
+                    persistent=True, watch_accessed_variables=False
+                ) as t1:
                     t1.watch(x_train)
                     phi = model_phi(x_train)
                     psi = model_psi(x_train)
@@ -172,18 +174,28 @@ class HHPINN2D:
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
                 xmin = (0.0, 0.0)
-                xmax = (2*np.pi, 2*np.pi)
+                xmax = (2 * np.pi, 2 * np.pi)
                 x_colloc = tf.Variable(
-                    np.random.uniform(xmin, xmax, size=(256, 2)), dtype=tf.float32, trainable=False
+                    np.random.uniform(xmin, xmax, size=(256, 2)),
+                    dtype=tf.float32,
+                    trainable=False,
                 )
 
-                with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t4:
+                with tf.GradientTape(
+                    persistent=True, watch_accessed_variables=False
+                ) as t4:
                     t4.watch(x_colloc)
-                    with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t3:
+                    with tf.GradientTape(
+                        persistent=True, watch_accessed_variables=False
+                    ) as t3:
                         t3.watch(x_colloc)
-                        with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t2:
+                        with tf.GradientTape(
+                            persistent=True, watch_accessed_variables=False
+                        ) as t2:
                             t2.watch(x_colloc)
-                            with tf.GradientTape(persistent=True, watch_accessed_variables=False) as t1:
+                            with tf.GradientTape(
+                                persistent=True, watch_accessed_variables=False
+                            ) as t1:
                                 t1.watch(x_colloc)
                                 psi = model_psi(x_colloc)
 
@@ -230,14 +242,14 @@ class HHPINN2D:
                 grad_d2v_dyy = t4.gradient(d2v_dyy, x_colloc)
 
                 reg_4 = (
-                    tf.reduce_sum(grad_d2u_dxx**2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dxy**2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyx**2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyy**2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxx**2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxy**2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyx**2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyy**2, axis=1)
+                    tf.reduce_sum(grad_d2u_dxx ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dxy ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dyx ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2u_dyy ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dxx ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dxy ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dyx ** 2, axis=1)
+                    + tf.reduce_sum(grad_d2v_dyy ** 2, axis=1)
                 )
 
                 loss = tf.reduce_mean(misfit) + self.s4 * tf.reduce_mean(reg_4)
