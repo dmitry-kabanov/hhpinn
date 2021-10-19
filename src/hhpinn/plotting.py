@@ -80,7 +80,8 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     fig.tight_layout(pad=0.1)
 
 
-def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None, vmax=None):
+def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None,
+                        vmax=None, cbar_label=None):
     assert inputs.ndim == 2
     assert errors.ndim == 1
     assert inputs.shape[1] == 2
@@ -114,7 +115,7 @@ def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None, vmax=None
     # It is important that `colorbar` is invoked immediately after
     # `pcolormesh`, otherwise, the range of the colorbar can be affected
     # by the following optional plotting of the points `locs`.
-    plt.colorbar()
+    plt.colorbar(label=cbar_label)
     if len(locs):
         plt.scatter(locs[:, 0], locs[:, 1], s=30, c="red")
     plt.xlabel(r"$x$")

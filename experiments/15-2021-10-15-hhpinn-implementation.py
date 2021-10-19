@@ -367,7 +367,7 @@ render_figure(
 )
 
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max)
+                                    vmin=0.0, vmax=err_max, cbar_label="%")
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=best.pdf"),
