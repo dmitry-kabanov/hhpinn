@@ -132,12 +132,15 @@ class HHPINN2D:
 
         # Instantiate optimizer.
         if self.optimizer == "sgd":
-            opt = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
+            opt_phi = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
+            opt_psi = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
         elif self.optimizer == "adam":
-            opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+            opt_phi = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+            opt_psi = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         else:
             raise ValueError("Unknown value for optimizer")
-        self.opt = opt
+        self.opt_phi = opt_phi
+        self.opt_psi = opt_psi
 
         # Dictionary for recording training history.
         self.history = {"loss": [], "misfit": [], "sobolev4": []}
@@ -256,10 +259,10 @@ class HHPINN2D:
                 loss = tf.reduce_mean(misfit) + self.s4 * tf.reduce_mean(reg_4)
 
             grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
-            opt.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
+            opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
 
             grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
-            opt.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
+            opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
             self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
