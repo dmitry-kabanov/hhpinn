@@ -302,6 +302,7 @@ class HHPINN2D:
         result = y_pred.numpy()
 
         if self.preprocessing == "standardization-both":
+            raise ValueError("This is buggy, not completely implemented")
             result = self.transformer_output.inverse_transform(result)
 
         return result
