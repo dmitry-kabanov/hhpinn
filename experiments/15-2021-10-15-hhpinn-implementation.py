@@ -41,7 +41,7 @@ CONFIGS = [
     Config([150], "adam", 1e-3),
     Config([150], "adam", 1e-2),
     Config([150], "adam", 1e-1),
-    Config([150], "adam", 1e+0),
+    Config([150], "adam", 1e0),
 ]
 
 # Grid size for test data.
@@ -53,6 +53,7 @@ RESULT_MODEL_TEMPLATE = os.path.join(OUTDIR, "model-{:d}")
 # %%
 try:
     from IPython import get_ipython
+
     ip = str(get_ipython())
     if "zmqshell" in ip:
         args = dict(save=True)
@@ -129,9 +130,7 @@ else:
 # Load models from disk.
 models = []
 for i, __ in enumerate(CONFIGS):
-    m = HHPINN2D.load(
-        RESULT_MODEL_TEMPLATE.format(i)
-    )
+    m = HHPINN2D.load(RESULT_MODEL_TEMPLATE.format(i))
     models.append(m)
 
 # %%
@@ -147,28 +146,27 @@ step = 1
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["loss"])+1, step),
+        range(1, len(models[i].history["loss"]) + 1, step),
         models[i].history["loss"][::step],
         linestyle=styles[i],
-        label=str(c))
+        label=str(c),
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
 plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
-render_figure(
-    to_file=os.path.join("_assets", "loss-history.pdf"),
-    save=args["save"]
-)
+render_figure(to_file=os.path.join("_assets", "loss-history.pdf"), save=args["save"])
 
 # %%
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["misfit"])+1, step),
+        range(1, len(models[i].history["misfit"]) + 1, step),
         models[i].history["misfit"][::step],
         linestyle=styles[i],
-        label=str(c))
+        label=str(c),
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Misfit loss")
 plt.legend(loc="lower left")
@@ -178,10 +176,11 @@ plt.tight_layout(pad=0.3)
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["sobolev4"])+1, step),
+        range(1, len(models[i].history["sobolev4"]) + 1, step),
         models[i].history["sobolev4"][::step],
         linestyle=styles[i],
-        label=str(c))
+        label=str(c),
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Sobolev4 loss")
 plt.legend(loc="lower left")
@@ -194,18 +193,18 @@ plt.tight_layout(pad=0.3)
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["val_loss"])+1, step),
+        range(1, len(models[i].history["val_loss"]) + 1, step),
         models[i].history["val_loss"][::step],
         linestyle=styles[i],
-        label=str(c))
+        label=str(c),
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Validation loss")
 plt.legend(loc="upper left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
-    to_file=os.path.join("_assets", "val-loss-history.pdf"),
-    save=args["save"]
+    to_file=os.path.join("_assets", "val-loss-history.pdf"), save=args["save"]
 )
 
 
@@ -216,36 +215,36 @@ render_figure(
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["grad_phi_inf_norm"])+1, step),
+        range(1, len(models[i].history["grad_phi_inf_norm"]) + 1, step),
         models[i].history["grad_phi_inf_norm"][::step],
         linestyle=styles[i],
-        label=c)
+        label=c,
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Gradient phi Inf norm")
 plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
-    to_file=os.path.join("_assets", "grad-phi-inf-history.pdf"),
-    save=args["save"]
+    to_file=os.path.join("_assets", "grad-phi-inf-history.pdf"), save=args["save"]
 )
 
 # %%
 plt.figure()
 for i, c in enumerate(CONFIGS):
     plt.semilogy(
-        range(1, len(models[i].history["grad_psi_inf_norm"])+1, step),
+        range(1, len(models[i].history["grad_psi_inf_norm"]) + 1, step),
         models[i].history["grad_psi_inf_norm"][::step],
         linestyle=styles[i],
-        label=c)
+        label=c,
+    )
 plt.xlabel("Epochs")
 plt.ylabel("Gradient psi Inf norm")
 plt.legend(loc="lower left")
 plt.tight_layout(pad=0.3)
 
 render_figure(
-    to_file=os.path.join("_assets", "grad-psi-inf-history.pdf"),
-    save=args["save"]
+    to_file=os.path.join("_assets", "grad-psi-inf-history.pdf"), save=args["save"]
 )
 
 # %% [markdown]
@@ -290,9 +289,7 @@ render_figure(
 # ## True full field
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, test_u
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field.pdf"),
@@ -313,27 +310,21 @@ pred_u_best, pred_u_best_curl_free, pred_u_best_div_free = model_best.predict(
 )
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_first, test_u
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_first, test_u)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=first.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_last, test_u
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_last, test_u)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=last.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_best, test_u
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_best, test_u)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=best.pdf"),
@@ -344,9 +335,7 @@ render_figure(
 # ## True and predicted best field for potential (curl-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, test_u_curl_free
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u_curl_free)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field-curl-free.pdf"),
@@ -366,18 +355,14 @@ render_figure(
 # ## True and predicted best field for solenoidal (div-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, test_u_div_free
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u_div_free)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field-div-free.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_best_div_free
-)
+hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_best_div_free)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-div-free.pdf"),
@@ -399,31 +384,46 @@ err_u_last = rel_pw_error(test_u, pred_u_last)
 err_u_best = rel_pw_error(test_u, pred_u_best)
 err_max = np.max((err_u_first, err_u_last, err_u_best))
 
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_first, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max,
-                                    cbar_label="Fraction")
-
-render_figure(
-    to_file=os.path.join("_assets", "error-field-model=first.pdf"),
-    save=args["save"]
+hhpinn.plotting.plot_error_field_2D(
+    test_x,
+    err_u_first,
+    GRID_SIZE,
+    train_x,
+    vmin=0.0,
+    vmax=err_max,
+    cbar_label="Fraction",
 )
 
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max,
-                                    cbar_label="Fraction")
-
 render_figure(
-    to_file=os.path.join("_assets", "error-field-model=last.pdf"),
-    save=args["save"]
+    to_file=os.path.join("_assets", "error-field-model=first.pdf"), save=args["save"]
 )
 
-hhpinn.plotting.plot_error_field_2D(test_x, err_u_best, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max,
-                                    cbar_label="Fraction")
+hhpinn.plotting.plot_error_field_2D(
+    test_x,
+    err_u_last,
+    GRID_SIZE,
+    train_x,
+    vmin=0.0,
+    vmax=err_max,
+    cbar_label="Fraction",
+)
 
 render_figure(
-    to_file=os.path.join("_assets", "error-field-model=best.pdf"),
-    save=args["save"]
+    to_file=os.path.join("_assets", "error-field-model=last.pdf"), save=args["save"]
+)
+
+hhpinn.plotting.plot_error_field_2D(
+    test_x,
+    err_u_best,
+    GRID_SIZE,
+    train_x,
+    vmin=0.0,
+    vmax=err_max,
+    cbar_label="Fraction",
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "error-field-model=best.pdf"), save=args["save"]
 )
 
 
