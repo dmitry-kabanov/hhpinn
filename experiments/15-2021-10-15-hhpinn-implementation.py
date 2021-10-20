@@ -308,7 +308,9 @@ model_last = models[-1]
 model_best = models[best_model_idx]
 pred_u_first = model_first.predict(test_x)
 pred_u_last = model_last.predict(test_x)
-pred_u_best = model_best.predict(test_x)
+pred_u_best, pred_u_best_curl_free, pred_u_best_div_free = model_best.predict(
+    test_x, return_separate_fields=True
+)
 
 # %%
 hhpinn.plotting.plot_stream_field_2D(
