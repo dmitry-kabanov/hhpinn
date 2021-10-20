@@ -97,7 +97,7 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 800, 1500], [0.1, 0.05, 0.01, 0.001]
+        [200, 500, 3000], [0.1, 0.05, 0.03, 0.001]
     )
     start = time.time()
     models = []
