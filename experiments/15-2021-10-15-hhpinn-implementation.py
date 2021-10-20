@@ -97,14 +97,14 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 500, 3000], [0.1, 0.05, 0.03, 0.001]
+        [200, 500, 1000], [0.1, 0.05, 0.01, 0.001]
     )
     start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=2000,
+            epochs=3000,
             l2=0,
             s4=c.s4,
             optimizer=c.opt,
