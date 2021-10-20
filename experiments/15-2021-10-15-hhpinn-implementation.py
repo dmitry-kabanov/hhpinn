@@ -390,6 +390,8 @@ render_figure(
 # %% [markdown]
 # This is a comparison of the pointwise error fields between
 # different models.
+# The errors are relative and shown in the same scale to make it easy
+# to compare them.
 
 # %%
 err_u_first = rel_pw_error(test_u, pred_u_first)
@@ -398,7 +400,8 @@ err_u_best = rel_pw_error(test_u, pred_u_best)
 err_max = np.max((err_u_first, err_u_last, err_u_best))
 
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_first, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max)
+                                    vmin=0.0, vmax=err_max,
+                                    cbar_label="Fraction")
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=first.pdf"),
@@ -406,7 +409,8 @@ render_figure(
 )
 
 hhpinn.plotting.plot_error_field_2D(test_x, err_u_last, GRID_SIZE, train_x,
-                                    vmin=0.0, vmax=err_max)
+                                    vmin=0.0, vmax=err_max,
+                                    cbar_label="Fraction")
 
 render_figure(
     to_file=os.path.join("_assets", "error-field-model=last.pdf"),
