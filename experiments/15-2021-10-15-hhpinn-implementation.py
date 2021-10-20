@@ -339,6 +339,50 @@ render_figure(
 )
 
 # %% [markdown]
+# ## True and predicted best field for potential (curl-free) part
+
+# %%
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, test_u_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "true-field-curl-free.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, pred_u_best_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-curl-free.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
+# ## True and predicted best field for solenoidal (div-free) part
+
+# %%
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, test_u_div_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "true-field-div-free.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    GRID_SIZE, ds.domain, test_x, pred_u_best_div_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-div-free.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
 # ## Error fields of the first, last, and best models
 
 # %% [markdown]
