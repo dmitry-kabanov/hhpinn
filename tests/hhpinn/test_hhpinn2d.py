@@ -180,3 +180,17 @@ class TestHHPINN2D:
         assert f.ndim == 1
         assert f.shape[0] == x_new.shape[0]
         assert np.linalg.norm(f, np.Inf) <= 1e-7
+
+    def test_prediction_total_field_is_sum_of_components(self):
+        model = HHPINN2D(epochs=3)
+
+        x = np.random.random(size=(10, 2))
+        u = np.random.random(size=(10, 2))
+        x_new = np.random.random(size=(2000, 2))
+
+        model.fit(x, u)
+
+        pred_tot = model.predict(x_new)
+        pred_pot, pred_sol = model.predict_separate_fields(x_new)
+
+        npt.assert_allclose(pred_tot, pred_pot + pred_sol, rtol=1e-7, atol=2e-7)
