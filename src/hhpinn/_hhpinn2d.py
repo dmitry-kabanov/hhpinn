@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from sklearn.preprocessing import StandardScaler
 
@@ -318,6 +318,14 @@ class HHPINN2D:
             return result, curl_free_part.numpy(), div_free_part.numpy()
         else:
             return result
+
+    def predict_separate_fields(
+        self, x_new: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Predict potential and solenoidal vector fields separately."""
+        __, result_pot, result_sol = self.predict(x_new, return_separate_fields=True)
+
+        return result_pot, result_sol
 
     def compute_divergence(self, x_new):
         if self.preprocessing == "identity":
