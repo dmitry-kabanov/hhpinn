@@ -181,6 +181,30 @@ class TestHHPINN2D:
         assert f.shape[0] == x_new.shape[0]
         assert np.linalg.norm(f, np.Inf) <= 1e-7
 
+    def test_prediction_components_are_orthogonal_in_L2_sense(self):
+        # Test that potential and solenoidal components of the total field
+        # are orthogonal to each other.
+        # We compute inner product via Monte Carlo method for different
+        # sample sizes and check that the result is close to zero.
+        model = HHPINN2D(epochs=3)
+
+        x = np.random.random(size=(10, 2))
+        u = np.random.random(size=(10, 2))
+
+        model.fit(x, u)
+
+        ip = []
+        for N in [128, 256, 512, 1024, 2048, 4096]:
+            x_new = np.random.random(size=(N, 2))
+            pred_u_poten, pred_u_solen = model.predict_separate_fields(x_new)
+
+            dot_prod_pw = np.zeros(len(pred_u_poten))
+            for i in range(len(pred_u_poten)):
+                dot_prod_pw[i] = np.dot(pred_u_poten[i], pred_u_solen[i])
+            ip.append(np.mean(dot_prod_pw))
+
+        npt.assert_allclose(dot_prod_pw, 0.0, rtol=1e-6, atol=2e-7)
+
     def test_prediction_total_field_is_sum_of_components(self):
         model = HHPINN2D(epochs=3)
 
