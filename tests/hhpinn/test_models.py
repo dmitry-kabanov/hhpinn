@@ -15,7 +15,7 @@ class TestStreamFunctionPINN:
         assert sut.optimizer == "sgd"
         assert sut.learning_rate == 0.01
         assert sut.preprocessing == "identity"
-        assert sut.save_grad_norm == False
+        assert sut.save_grad_norm is False
         assert sut.save_grad == 0
 
     def test_saves_hyperparameters(self):
