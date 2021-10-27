@@ -107,7 +107,7 @@ if not os.listdir(OUTDIR):
             hidden_layers=c.hl,
             epochs=3000,
             l2=0,
-            s4=1e-3,
+            s4=1e-4,
             ip=c.ip,
             optimizer=c.opt,
             learning_rate=lr,
