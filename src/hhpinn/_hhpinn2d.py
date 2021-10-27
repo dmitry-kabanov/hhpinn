@@ -57,6 +57,7 @@ class HHPINN2D:
             "epochs": self.epochs,
             "l2": self.l2,
             "s4": self.s4,
+            "ip": self.ip,
             "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
@@ -282,15 +283,12 @@ class HHPINN2D:
                     stream_func_grad = t1.gradient(psi, x_colloc_ip)
                     sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-                    for i in range(x_colloc_ip.shape[0]):
-                        dot_prod_pw = tf.dot(pot_part[i], sol_part[i])
-                        ip_reg += dot_prod_pw
-                    ip_reg /= x_colloc_ip.shape[0]
+                    ip_reg = tf.square(tf.reduce_sum(pot_part * sol_part, axis=1))
 
                 loss = (
                     tf.reduce_mean(misfit)
                     + self.s4 * tf.reduce_mean(reg_4)
-                    + self.ip * ip_reg
+                    + self.ip * tf.reduce_mean(ip_reg)
                 )
 
             grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
