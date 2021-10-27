@@ -26,6 +26,7 @@ class HHPINN2D:
         epochs=50,
         l2=0.0,
         s4=0.0,
+        ip=0.0,
         optimizer="sgd",
         learning_rate=0.01,
         preprocessing="identity",
@@ -36,12 +37,13 @@ class HHPINN2D:
         self.epochs = epochs
         self.l2 = l2
         self.s4 = s4
+        self.ip = ip
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 9
+        self._nparams = 10
 
         self.model_phi = None
         self.model_psi = None
@@ -256,7 +258,40 @@ class HHPINN2D:
                     + tf.reduce_sum(grad_d2v_dyy ** 2, axis=1)
                 )
 
-                loss = tf.reduce_mean(misfit) + self.s4 * tf.reduce_mean(reg_4)
+                ip_reg = 0.0
+                if self.ip:
+                    x_colloc_ip = tf.Variable(
+                        np.random.uniform(xmin, xmax, size=(256, 2)),
+                        dtype=tf.float32,
+                        trainable=False,
+                    )
+
+                    with tf.GradientTape(
+                        persistent=True, watch_accessed_variables=False
+                    ) as t1:
+                        t1.watch(x_colloc_ip)
+                        phi = model_phi(x_colloc_ip)
+                        psi = model_psi(x_colloc_ip)
+
+                    # Potential (curl-free part) is a gradient of scalar-valued
+                    # function phi.
+                    pot_part = t1.gradient(phi, x_colloc_ip)
+
+                    # Divergence-free part in 2D is defined by stream function:
+                    # u = ∂psi_∂y, v = -∂psi_∂x.
+                    stream_func_grad = t1.gradient(psi, x_colloc_ip)
+                    sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+
+                    for i in range(x_colloc_ip.shape[0]):
+                        dot_prod_pw = tf.dot(pot_part[i], sol_part[i])
+                        ip_reg += dot_prod_pw
+                    ip_reg /= x_colloc_ip.shape[0]
+
+                loss = (
+                    tf.reduce_mean(misfit)
+                    + self.s4 * tf.reduce_mean(reg_4)
+                    + self.ip * ip_reg
+                )
 
             grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
             opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
