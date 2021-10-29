@@ -2,6 +2,7 @@ import numpy as np
 import numpy.testing as npt
 
 from hhpinn.datasets import TGV2DPlusTrigonometricFlow
+from hhpinn.datasets import RibeiroEtal2016Dataset
 
 
 class TestTGV2DPlusTrigonometricFlow:
@@ -31,3 +32,23 @@ class TestTGV2DPlusTrigonometricFlow:
             # Assert that inner product of potential and solenoidal fields
             # is equal to zero, that is, the fields are orthogonal.
             npt.assert_allclose(inner_prod, 0.0, rtol=1e-7, atol=1e-7)
+
+
+class TestRibeiroEtal2016:
+    def test_grid_size_param_is_used(self):
+        grid_size = (11, 11)
+        ds = RibeiroEtal2016Dataset(grid_size)
+
+        assert ds.grid_size == grid_size
+    # def test_mean_for_potential_component_maximum(self):
+    #     grid_size = (101, 101)
+    #     ds = RibeiroEtal2016Dataset(grid_size)
+    #     n_samples = 20
+
+    #     phi_samples = []
+    #     for i in n_samples:
+    #         phi_i = ds.phi_fn()
+    #         phi_samples.append(phi_i)
+
+    #     phi_average = np.mean(phi_samples, axis=0)
+    #     assert phi_average.shape == grid_size
