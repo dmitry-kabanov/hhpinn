@@ -175,3 +175,8 @@ class TGV2DPlusTrigonometricFlow:
     def _vortex(self, x):
         """Compute vortex field value at point `x`."""
         return np.asarray([np.cos(x[0]) * np.sin(x[1]), -np.sin(x[0]) * np.cos(x[1])])
+
+
+class RibeiroEtal2016Dataset:
+    def __init__(self, grid_size):
+        self.grid_size = grid_size
