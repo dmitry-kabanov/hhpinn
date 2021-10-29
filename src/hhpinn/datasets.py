@@ -227,3 +227,22 @@ class RibeiroEtal2016Dataset:
         plt.tight_layout(pad=0.1)
 
         return fig
+
+    def plot_psi(self):
+        """Plot solenoidal (psi) component of the vector field.
+
+        Returns
+        -------
+        fig : plt.Figure
+            Handle to matplotlib Figure object.
+        """
+        psi = self.sample_psi()
+
+        fig = plt.figure()
+        plt.pcolormesh(self.xx, self.yy, psi)
+        plt.xlabel(r"$x$")
+        plt.ylabel(r"$y$")
+        plt.colorbar()
+        plt.tight_layout(pad=0.1)
+
+        return fig
