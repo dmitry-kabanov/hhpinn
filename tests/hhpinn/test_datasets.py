@@ -46,18 +46,6 @@ class TestRibeiroEtal2016:
 
         assert phi.shape == grid_size
         assert psi.shape == grid_size
-    # def test_mean_for_potential_component_maximum(self):
-    #     grid_size = (101, 101)
-    #     ds = RibeiroEtal2016Dataset(grid_size)
-    #     n_samples = 20
-
-    #     phi_samples = []
-    #     for i in n_samples:
-    #         phi_i = ds.phi_fn()
-    #         phi_samples.append(phi_i)
-
-    #     phi_average = np.mean(phi_samples, axis=0)
-    #     assert phi_average.shape == grid_size
 
     def test_constants(self):
         ds = RibeiroEtal2016Dataset((5, 5))
@@ -67,3 +55,22 @@ class TestRibeiroEtal2016:
 
         assert ds.lb == -6.0
         assert ds.ub == +6.0
+
+    def test_mean_for_potential_component_maximum(self):
+        grid_size = (101, 101)
+        ds = RibeiroEtal2016Dataset(grid_size)
+        n_samples = 20
+
+        phi_samples = []
+        for i in range(n_samples):
+            phi_i = ds.sample_phi()
+            phi_samples.append(phi_i)
+
+        phi_average = np.mean(phi_samples, axis=0)
+        assert phi_average.shape == grid_size
+
+        max = np.max(phi_average)
+        npt.assert_allclose(max, 1.0, rtol=1e-6, atol=1e-6)
+
+        min = np.min(phi_average)
+        npt.assert_allclose(min, -1.0, rtol=1e-6, atol=1e-6)
