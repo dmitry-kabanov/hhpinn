@@ -180,3 +180,9 @@ class TGV2DPlusTrigonometricFlow:
 class RibeiroEtal2016Dataset:
     def __init__(self, grid_size):
         self.grid_size = grid_size
+
+    def sample_phi(self):
+        return np.zeros(self.grid_size)
+
+    def sample_psi(self):
+        return np.zeros(self.grid_size)

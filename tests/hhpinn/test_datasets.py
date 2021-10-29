@@ -40,6 +40,12 @@ class TestRibeiroEtal2016:
         ds = RibeiroEtal2016Dataset(grid_size)
 
         assert ds.grid_size == grid_size
+
+        phi = ds.sample_phi()
+        psi = ds.sample_psi()
+
+        assert phi.shape == grid_size
+        assert psi.shape == grid_size
     # def test_mean_for_potential_component_maximum(self):
     #     grid_size = (101, 101)
     #     ds = RibeiroEtal2016Dataset(grid_size)
