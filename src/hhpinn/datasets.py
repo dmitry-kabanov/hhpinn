@@ -1,4 +1,5 @@
 """Module contains functions for working with datasets."""
+import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Tuple
@@ -203,3 +204,22 @@ class RibeiroEtal2016Dataset:
 
     def sample_psi(self):
         return np.zeros(self.grid_size)
+
+    def plot_phi(self):
+        """Plot potential (phi) component of the vector field.
+
+        Returns
+        -------
+        fig : plt.Figure
+            Handle to matplotlib Figure object.
+        """
+        phi = self.sample_phi()
+
+        fig = plt.figure()
+        plt.pcolormesh(self.xx, self.yy, phi)
+        plt.xlabel(r"$x$")
+        plt.ylabel(r"$y$")
+        plt.colorbar()
+        plt.tight_layout(pad=0.1)
+
+        return fig
