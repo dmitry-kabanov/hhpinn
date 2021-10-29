@@ -181,6 +181,11 @@ class RibeiroEtal2016Dataset:
     def __init__(self, grid_size):
         self.grid_size = grid_size
 
+        self.p0 = (+3.0, -3.0)
+        self.p1 = (-3.0, -3.0)
+
+        self.lb, self.ub = (-6.0, 6.0)
+
     def sample_phi(self):
         return np.zeros(self.grid_size)
 

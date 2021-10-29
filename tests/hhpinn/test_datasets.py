@@ -58,3 +58,12 @@ class TestRibeiroEtal2016:
 
     #     phi_average = np.mean(phi_samples, axis=0)
     #     assert phi_average.shape == grid_size
+
+    def test_constants(self):
+        ds = RibeiroEtal2016Dataset((5, 5))
+
+        assert ds.p0 == (+3.0, -3.0)
+        assert ds.p1 == (-3.0, -3.0)
+
+        assert ds.lb == -6.0
+        assert ds.ub == +6.0
