@@ -52,6 +52,7 @@ class TestRibeiroEtal2016:
 
         assert ds.p0 == (+3.0, -3.0)
         assert ds.p1 == (-3.0, -3.0)
+        assert ds.p2 == (+0.0, +3.0)
 
         assert ds.lb == -6.0
         assert ds.ub == +6.0
@@ -74,3 +75,19 @@ class TestRibeiroEtal2016:
 
         min = np.min(phi_average)
         npt.assert_allclose(min, -1.0, rtol=1e-6, atol=1e-6)
+
+    def test_mean_for_solenoidal_field_maximum(self):
+        grid_size = (101, 101)
+        ds = RibeiroEtal2016Dataset(grid_size)
+        n_samples = 20
+
+        psi_samples = []
+        for i in range(n_samples):
+            psi_i = ds.sample_psi()
+            psi_samples.append(psi_i)
+
+        psi_average = np.mean(psi_samples, axis=0)
+        assert psi_average.shape == grid_size
+
+        max = np.max(psi_average)
+        npt.assert_allclose(max, 1.0, rtol=1e-6, atol=1e-6)

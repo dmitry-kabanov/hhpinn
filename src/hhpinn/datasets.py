@@ -182,8 +182,9 @@ class RibeiroEtal2016Dataset:
     def __init__(self, grid_size):
         self.grid_size = grid_size
 
-        self.p0 = (+3.0, -3.0)
-        self.p1 = (-3.0, -3.0)
+        self.p0 = (+3.0, -3.0)  # Source center in potential field.
+        self.p1 = (-3.0, -3.0)  # Sink center in potential field.
+        self.p2 = (+0.0, +3.0)  # Vortex center in solenoidal field.
 
         self.lb, self.ub = (-6.0, 6.0)
 
@@ -203,7 +204,10 @@ class RibeiroEtal2016Dataset:
         return source + sink
 
     def sample_psi(self):
-        return np.zeros(self.grid_size)
+        xx, yy = self.xx, self.yy
+        x2, y2 = self.p2
+
+        return np.exp(-0.5 * ((xx-x2)**2 + (yy - y2)**2))
 
     def plot_phi(self):
         """Plot potential (phi) component of the vector field.
