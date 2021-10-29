@@ -186,13 +186,16 @@ class RibeiroEtal2016Dataset:
 
         self.lb, self.ub = (-6.0, 6.0)
 
-    def sample_phi(self):
-        x0, y0 = self.p0
-        x1, y1 = self.p1
         x = np.linspace(self.lb, self.ub, self.grid_size[0])
         y = np.linspace(self.lb, self.ub, self.grid_size[0])
 
-        xx, yy = np.meshgrid(x, y)
+        self.xx, self.yy = np.meshgrid(x, y)
+
+    def sample_phi(self):
+        x0, y0 = self.p0
+        x1, y1 = self.p1
+
+        xx, yy = self.xx, self.yy
 
         source = np.exp(-0.5 * ((xx-x0)**2 + (yy-y0)**2))
         sink = -np.exp(-0.5 * ((xx-x1)**2 + (yy-y1)**2))
