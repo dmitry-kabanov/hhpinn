@@ -480,10 +480,10 @@ render_figure(
 # %%
 div_field_first = model_first.compute_divergence(test_x)
 div_field_first_norm = np.linalg.norm(div_field_first, np.Inf)
-hhpinn.plotting.plot_error_field_2D(test_x, div_field_first, GRID_SIZE, locs=train_x)
+hhpinn.plotting.plot_error_field_2D(test_x, div_field_first, TEST_GRID_SIZE, locs=train_x)
 print(f"Divergence field first Linf-norm: {div_field_first_norm:.2e}")
 
 div_field_last = model_last.compute_divergence(test_x)
 div_field_last_norm = np.linalg.norm(div_field_last, np.Inf)
-hhpinn.plotting.plot_error_field_2D(test_x, div_field_last, GRID_SIZE, locs=train_x)
+hhpinn.plotting.plot_error_field_2D(test_x, div_field_last, TEST_GRID_SIZE, locs=train_x)
 print(f"Divergence field last Linf-norm: {div_field_last_norm:.2e}")
