@@ -44,8 +44,11 @@ CONFIGS = [
     Config([150], "adam", 1e0),
 ]
 
-# Grid size for test data.
+# Grid size for validation data.
 GRID_SIZE = (11, 11)
+
+# Grid size for test data.
+TEST_GRID_SIZE = (101, 101)
 
 RESULT_MODEL_TEMPLATE = os.path.join(OUTDIR, "model-{:d}")
 
@@ -80,7 +83,10 @@ except (ImportError, NameError):
 # %%
 ds = hhpinn.datasets.TGV2DPlusTrigonometricFlow(N=200)
 train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data()
-test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(GRID_SIZE)
+val_x, val_u, val_u_curl_free, val_u_div_free = ds.load_data_on_grid(GRID_SIZE)
+test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(
+    TEST_GRID_SIZE
+)
 
 
 # %%
@@ -107,7 +113,7 @@ if not os.listdir(OUTDIR):
             hidden_layers=c.hl,
             epochs=3000,
             l2=0,
-            s4=1e-4,
+            s4=0,
             ip=c.ip,
             optimizer=c.opt,
             learning_rate=lr,
@@ -115,7 +121,7 @@ if not os.listdir(OUTDIR):
             save_grad=100,
         )
         models.append(model)
-        model.fit(train_x, train_u, validation_data=(test_x, test_u))
+        model.fit(train_x, train_u, validation_data=(val_x, val_u))
         savedir = RESULT_MODEL_TEMPLATE.format(i)
         os.makedirs(savedir)
         model.save(savedir)
@@ -260,7 +266,7 @@ for i, (c, model) in enumerate(zip(CONFIGS, models)):
     error_mse = mse(test_u, pred)
     # Sanity check that the validation loss at the end of training
     # is the same as prediction MSE here because I use the same data.
-    assert error_mse == model.history["val_loss"][-1]
+    # assert error_mse == model.history["val_loss"][-1]
     print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
     error_mse_list.append(error_mse)
 
@@ -290,7 +296,7 @@ render_figure(
 # ## True full field
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field.pdf"),
@@ -304,28 +310,32 @@ render_figure(
 model_first = models[0]
 model_last = models[-1]
 model_best = models[best_model_idx]
-pred_u_first = model_first.predict(test_x)
-pred_u_last = model_last.predict(test_x)
+pred_u_first, pred_u_first_curl_free, pred_u_first_div_free = model_first.predict(
+    test_x, return_separate_fields=True
+)
+pred_u_last, pred_u_last_curl_free, pred_u_last_div_free = model_last.predict(
+    test_x, return_separate_fields=True
+)
 pred_u_best, pred_u_best_curl_free, pred_u_best_div_free = model_best.predict(
     test_x, return_separate_fields=True
 )
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_first, test_u)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_first)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=first.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_last, test_u)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_last)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=last.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_best, test_u)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_best)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-field-model=best.pdf"),
@@ -336,7 +346,7 @@ render_figure(
 # ## True and predicted best field for potential (curl-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u_curl_free)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field-curl-free.pdf"),
@@ -344,11 +354,29 @@ render_figure(
 )
 
 hhpinn.plotting.plot_stream_field_2D(
-    GRID_SIZE, ds.domain, test_x, pred_u_best_curl_free
+    TEST_GRID_SIZE, ds.domain, test_x, pred_u_first_curl_free
 )
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-curl-free.pdf"),
+    to_file=os.path.join("_assets", "pred-field-curl-free-model=first.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    TEST_GRID_SIZE, ds.domain, test_x, pred_u_last_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-curl-free-model=last.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(
+    TEST_GRID_SIZE, ds.domain, test_x, pred_u_best_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-curl-free-model=best.pdf"),
     save=args["save"],
 )
 
@@ -356,17 +384,31 @@ render_figure(
 # ## True and predicted best field for solenoidal (div-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, test_u_div_free)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free)
 
 render_figure(
     to_file=os.path.join("_assets", "true-field-div-free.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(GRID_SIZE, ds.domain, test_x, pred_u_best_div_free)
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_first_div_free)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-div-free.pdf"),
+    to_file=os.path.join("_assets", "pred-field-div-free-model=first.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_last_div_free)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-div-free-model=last.pdf"),
+    save=args["save"],
+)
+
+hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_best_div_free)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-field-div-free-model=best.pdf"),
     save=args["save"],
 )
 
@@ -388,7 +430,7 @@ err_max = np.max((err_u_first, err_u_last, err_u_best))
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_first,
-    GRID_SIZE,
+    TEST_GRID_SIZE,
     train_x,
     vmin=0.0,
     vmax=err_max,
@@ -402,7 +444,7 @@ render_figure(
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_last,
-    GRID_SIZE,
+    TEST_GRID_SIZE,
     train_x,
     vmin=0.0,
     vmax=err_max,
@@ -416,7 +458,7 @@ render_figure(
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_best,
-    GRID_SIZE,
+    TEST_GRID_SIZE,
     train_x,
     vmin=0.0,
     vmax=err_max,
