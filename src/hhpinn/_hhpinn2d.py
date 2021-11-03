@@ -45,8 +45,8 @@ class HHPINN2D:
         self.save_grad = save_grad
         self._nparams = 10
 
-        self.model_phi = None
-        self.model_psi = None
+        self.model_phi: tf.keras.Model = None
+        self.model_psi: tf.keras.Model = None
         self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
         self.transformer_output = None
