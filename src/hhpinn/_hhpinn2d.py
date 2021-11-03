@@ -45,8 +45,8 @@ class HHPINN2D:
         self.save_grad = save_grad
         self._nparams = 10
 
-        self.model_phi = None
-        self.model_psi = None
+        self.model_phi: tf.keras.Model = None
+        self.model_psi: tf.keras.Model = None
         self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
         self.transformer_output = None
@@ -394,6 +394,59 @@ class HHPINN2D:
         result = divergence.numpy()
 
         del div_tape
+
+        # if self.preprocessing == "standardization-both":
+        #     result = self.transformer_output.inverse_transform(result)
+
+        return result
+
+    def compute_curl_of_potential_field(self, x_new):
+        r"""Compute curl of potential field represented by \nabla \phi.
+
+        Note that here we use that :math:`\nabla \phi = (\partial_x \phi,
+        \partial_y \phi, 0)` and :math:`\phi` does not depend on z-coordinate
+        that gives the following formula for computing the curl:
+
+            \nabla \times \nabla \phi = \left(
+                \partial_{xy} \phi - \partial_{yx} \phi
+            \right) \vec k,
+
+        which shows that the curl will be zero if \phi is smooth enough that
+        the mixed derivatives do not depend on the order of differentiation.
+
+        """
+        if self.preprocessing == "identity":
+            x_new_s = x_new
+        else:
+            x_new_s = self.transformer.transform(x_new)
+
+        # We need input as `tf.Variable` to be able to record operations
+        # inside a gradient tape.
+        x_var = tf.Variable(x_new_s, dtype=tf.float32)
+
+        with tf.GradientTape(
+            persistent=True, watch_accessed_variables=False
+        ) as curl_tape:
+            curl_tape.watch(x_var)
+            with tf.GradientTape(watch_accessed_variables=False) as tape:
+                tape.watch(x_var)
+                phi = self.model_phi(x_var)
+
+            pot_part = tape.gradient(phi, x_var)
+
+            u, v = tf.split(pot_part, 2, axis=1)
+
+        grad_u = curl_tape.gradient(u, x_var)
+        grad_v = curl_tape.gradient(v, x_var)
+
+        du_dy = grad_u[:, 1]
+        dv_dx = grad_v[:, 0]
+
+        curl = du_dy - dv_dx
+
+        result = curl.numpy()
+
+        del curl_tape
 
         # if self.preprocessing == "standardization-both":
         #     result = self.transformer_output.inverse_transform(result)
