@@ -487,3 +487,29 @@ div_field_last = model_last.compute_divergence(test_x)
 div_field_last_norm = np.linalg.norm(div_field_last, np.Inf)
 hhpinn.plotting.plot_error_field_2D(test_x, div_field_last, TEST_GRID_SIZE, locs=train_x)
 print(f"Divergence field last Linf-norm: {div_field_last_norm:.2e}")
+
+
+# %% [markdown]
+# ## Curl of potential (curl-free) fields of the first, last, and best models
+#
+# Sanity checks that the neural networks construct the potential part of
+# the fields which really satisfies the curl-free condition.
+# Computations are done in single-precision, which has a machine epsilon of
+# $1.19 \times 10^{-7}$.
+# Anything close to this number can be considered zero.
+
+# %%
+pot_field_first = model_first.compute_curl_of_potential_field(test_x)
+pot_field_first_norm = np.linalg.norm(pot_field_first, np.Inf)
+hhpinn.plotting.plot_error_field_2D(test_x, pot_field_first, TEST_GRID_SIZE, locs=train_x)
+print(f"Curl of potential field, first model, Linf-norm: {pot_field_first_norm:.2e}")
+
+pot_field_last = model_last.compute_curl_of_potential_field(test_x)
+pot_field_last_norm = np.linalg.norm(pot_field_last, np.Inf)
+hhpinn.plotting.plot_error_field_2D(test_x, pot_field_last, TEST_GRID_SIZE, locs=train_x)
+print(f"Curl of potential field, last model, Linf-norm: {pot_field_last_norm:.2e}")
+
+pot_field_best = model_best.compute_curl_of_potential_field(test_x)
+pot_field_best_norm = np.linalg.norm(pot_field_best, np.Inf)
+hhpinn.plotting.plot_error_field_2D(test_x, pot_field_best, TEST_GRID_SIZE, locs=train_x)
+print(f"Curl of potential field, best model, Linf-norm: {pot_field_best_norm:.2e}")
