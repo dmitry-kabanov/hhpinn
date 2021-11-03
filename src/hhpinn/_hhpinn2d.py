@@ -442,7 +442,7 @@ class HHPINN2D:
         du_dy = grad_u[:, 1]
         dv_dx = grad_v[:, 0]
 
-        curl = du_dy + dv_dx
+        curl = du_dy - dv_dx
 
         result = curl.numpy()
 
