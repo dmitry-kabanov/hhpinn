@@ -23,7 +23,7 @@ from typing import List
 
 from hhpinn import HHPINN2D
 from hhpinn.utils import render_figure
-from hhpinn.scoring import mse, rel_mse, rel_pw_error
+from hhpinn.scoring import mse, rel_pw_error
 
 
 # %% [markdown]
