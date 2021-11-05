@@ -453,6 +453,14 @@ class HHPINN2D:
 
         return result
 
+    def compute_inner_product(self, x_new: np.ndarray) -> np.ndarray:
+        pot_field, sol_field = self.predict_separate_fields(x_new)
+
+        ip = tf.reduce_sum(pot_field * sol_field, axis=1)
+        result = ip.numpy()
+
+        return result
+
     def save(self, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
         params = self.get_params()

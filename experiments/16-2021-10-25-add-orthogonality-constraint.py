@@ -23,7 +23,7 @@ from typing import List
 
 from hhpinn import HHPINN2D
 from hhpinn.utils import render_figure
-from hhpinn.scoring import mse, rel_mse, rel_pw_error
+from hhpinn.scoring import mse, rel_pw_error
 
 
 # %% [markdown]
@@ -513,3 +513,19 @@ pot_field_best = model_best.compute_curl_of_potential_field(test_x)
 pot_field_best_norm = np.linalg.norm(pot_field_best, np.Inf)
 hhpinn.plotting.plot_error_field_2D(test_x, pot_field_best, TEST_GRID_SIZE, locs=train_x)
 print(f"Curl of potential field, best model, Linf-norm: {pot_field_best_norm:.2e}")
+
+# %% [markdown]
+# ## Orthogonality of fields
+
+# %%
+ip_field_first = model_first.compute_inner_product(test_x)
+hhpinn.plotting.plot_error_field_2D(test_x, ip_field_first, TEST_GRID_SIZE)
+print(f"Inner product, first model: {ip_field_first.mean():.3f}")
+
+ip_field_last = model_last.compute_inner_product(test_x)
+hhpinn.plotting.plot_error_field_2D(test_x, ip_field_last, TEST_GRID_SIZE)
+print(f"Inner product, last model: {ip_field_last.mean():.3f}")
+
+ip_field_best = model_best.compute_inner_product(test_x)
+hhpinn.plotting.plot_error_field_2D(test_x, ip_field_best, TEST_GRID_SIZE)
+print(f"Inner product, best model: {ip_field_best.mean():.3f}")
