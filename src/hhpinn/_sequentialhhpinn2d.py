@@ -160,172 +160,63 @@ class SequentialHHPINN2D:
             self.history["grad_psi"] = {}
 
         if validation_data:
-            self.history["val_loss"] = []
+            self.history["val_phi_loss"] = []
+            self.history["val_psi_loss"] = []
 
+        tape_kw = dict(persistent=True, watch_accessed_variables=False)
+
+        # Training loop for solenoidal (\psi) network.
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
-                with tf.GradientTape(
-                    persistent=True, watch_accessed_variables=False
-                ) as t1:
+                with tf.GradientTape(**tape_kw) as t1:
                     t1.watch(x_train)
-                    phi = model_phi(x_train)
                     psi = model_psi(x_train)
 
-                # Potential (curl-free part) is a gradient of scalar-valued
-                # function phi.
-                curl_free_part = t1.gradient(phi, x_train)
-
                 # Divergence-free part in 2D is defined by stream function:
-                # u = ∂psi_∂y, v = -∂psi_∂x.
+                # u = -∂psi_∂y, v = +∂psi_∂x.
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-                u_pred = div_free_part + curl_free_part
+                u_pred = div_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
-
-                xmin = (0.0, 0.0)
-                xmax = (2 * np.pi, 2 * np.pi)
-                x_colloc = tf.Variable(
-                    np.random.uniform(xmin, xmax, size=(256, 2)),
-                    dtype=tf.float32,
-                    trainable=False,
-                )
-
-                with tf.GradientTape(
-                    persistent=True, watch_accessed_variables=False
-                ) as t4:
-                    t4.watch(x_colloc)
-                    with tf.GradientTape(
-                        persistent=True, watch_accessed_variables=False
-                    ) as t3:
-                        t3.watch(x_colloc)
-                        with tf.GradientTape(
-                            persistent=True, watch_accessed_variables=False
-                        ) as t2:
-                            t2.watch(x_colloc)
-                            with tf.GradientTape(
-                                persistent=True, watch_accessed_variables=False
-                            ) as t1:
-                                t1.watch(x_colloc)
-                                psi = model_psi(x_colloc)
-
-                            # Compute velocity predictions from the stream function `psi`.
-                            stream_func_grad = t1.gradient(psi, x_colloc)
-
-                            y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-                            u, v = tf.split(y_pred, 2, axis=1)
-
-                        grad_u = t2.gradient(u, x_colloc)
-                        grad_v = t2.gradient(v, x_colloc)
-
-                        du_dx, du_dy = tf.split(grad_u, 2, axis=1)
-                        dv_dx, dv_dy = tf.split(grad_v, 2, axis=1)
-
-                    grad_du_dx = t3.gradient(du_dx, x_colloc)
-                    grad_du_dy = t3.gradient(du_dy, x_colloc)
-                    grad_dv_dx = t3.gradient(dv_dx, x_colloc)
-                    grad_dv_dy = t3.gradient(dv_dy, x_colloc)
-
-                    d2u_dxx, d2u_dxy = tf.split(grad_du_dx, 2, axis=1)
-                    d2u_dyx, d2u_dyy = tf.split(grad_du_dy, 2, axis=1)
-                    d2v_dxx, d2v_dxy = tf.split(grad_dv_dx, 2, axis=1)
-                    d2v_dyx, d2v_dyy = tf.split(grad_dv_dy, 2, axis=1)
-
-                    # reg_3 = (
-                    #     d2u_dxx ** 2
-                    #     + d2u_dxy ** 2
-                    #     + d2u_dxx ** 2
-                    #     + d2u_dyy ** 2
-                    #     + d2v_dxx ** 2
-                    #     + d2v_dxy ** 2
-                    #     + d2v_dxx ** 2
-                    #     + d2v_dyy ** 2
-                    # )
-
-                grad_d2u_dxx = t4.gradient(d2u_dxx, x_colloc)
-                grad_d2u_dxy = t4.gradient(d2u_dxy, x_colloc)
-                grad_d2u_dyx = t4.gradient(d2u_dyx, x_colloc)
-                grad_d2u_dyy = t4.gradient(d2u_dyy, x_colloc)
-                grad_d2v_dxx = t4.gradient(d2v_dxx, x_colloc)
-                grad_d2v_dxy = t4.gradient(d2v_dxy, x_colloc)
-                grad_d2v_dyx = t4.gradient(d2v_dyx, x_colloc)
-                grad_d2v_dyy = t4.gradient(d2v_dyy, x_colloc)
-
-                reg_4 = (
-                    tf.reduce_sum(grad_d2u_dxx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dxy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyy ** 2, axis=1)
-                )
-
-                ip_reg = 0.0
-                if self.ip:
-                    x_colloc_ip = tf.Variable(
-                        np.random.uniform(xmin, xmax, size=(256, 2)),
-                        dtype=tf.float32,
-                        trainable=False,
-                    )
-
-                    with tf.GradientTape(
-                        persistent=True, watch_accessed_variables=False
-                    ) as t1:
-                        t1.watch(x_colloc_ip)
-                        phi = model_phi(x_colloc_ip)
-                        psi = model_psi(x_colloc_ip)
-
-                    # Potential (curl-free part) is a gradient of scalar-valued
-                    # function phi.
-                    pot_part = t1.gradient(phi, x_colloc_ip)
-
-                    # Divergence-free part in 2D is defined by stream function:
-                    # u = ∂psi_∂y, v = -∂psi_∂x.
-                    stream_func_grad = t1.gradient(psi, x_colloc_ip)
-                    sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-
-                    ip_reg = tf.square(tf.reduce_sum(pot_part * sol_part, axis=1))
-
-                loss = (
-                    tf.reduce_mean(misfit)
-                    + self.s4 * tf.reduce_mean(reg_4)
-                    + self.ip * tf.reduce_mean(ip_reg)
-                )
-
-            grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
-            opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
+                loss = tf.reduce_mean(misfit)
 
             grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
             opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
 
-            self.history["loss"].append(loss.numpy())
-            self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
-            self.history["sobolev4"].append(tf.reduce_mean(reg_4).numpy())
+            if validation_data:
+                val_pred = self.predict(validation_data[0])
+                val_loss = mse(validation_data[1], val_pred)
+                self.history["val_psi_loss"].append(val_loss)
 
-            print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
+            print(f"Epoch {e:d}")
 
-            if self.save_grad_norm:
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
-                self.history["grad_phi_inf_norm"].append(
-                    np.linalg.norm(flat_grad, ord=np.inf)
-                )
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
-                self.history["grad_psi_inf_norm"].append(
-                    np.linalg.norm(flat_grad, ord=np.inf)
-                )
+        # Residual output training data are defined by the original dataset
+        # and the prediction of the solenoidal (\psi) network.
+        y_train_resid = y_train - model_psi(x_train)
 
-            if self.save_grad and (((e + 1) % self.save_grad == 0) or e == 0):
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
-                self.history["grad_phi"][e] = flat_grad
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
-                self.history["grad_psi"][e] = flat_grad
+        # Training loop for the potential (\phi) network.
+        for e in range(self.epochs):
+            with tf.GradientTape(persistent=True) as tape_loss:
+                with tf.GradientTape(**tape_kw) as t1:
+                    t1.watch(x_train)
+                    phi = model_phi(x_train)
+
+                # Potential (curl-free part) is a gradient of scalar-valued
+                # function phi.
+                u_pot = t1.gradient(phi, x_train)
+
+                u_pred = u_pot
+                misfit = tf.norm(u_pred - y_train_resid, 2, axis=1) ** 2
+                loss = tf.reduce_mean(misfit)
+
+            grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
+            opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
 
             if validation_data:
                 val_pred = self.predict(validation_data[0])
                 val_loss = mse(validation_data[1], val_pred)
-                self.history["val_loss"].append(val_loss)
+                self.history["val_phi_loss"].append(val_loss)
 
     def predict(self, x_new, return_separate_fields=False):
         if self.preprocessing == "identity":
