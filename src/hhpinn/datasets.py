@@ -179,7 +179,21 @@ class TGV2DPlusTrigonometricFlow:
 
 
 class RibeiroEtal2016Dataset:
-    def __init__(self, grid_size):
+    """Dataset from the paper https://doi.org/10.1016/j.cag.2016.01.001
+
+    Note that we implement and use this dataset in a different manner from
+    their paper. In their paper, they use fixed grid 100x100 to create
+    measurements, where each sample of that size is randomized by randomizing
+    the locations of the "origins" of the Gaussians.
+
+    We here do not randomize the centers of the Gaussians.
+
+    Parameters
+    ----------
+    grid_size : tuple (Nx, Ny)
+        2-tuple containing resolution along x- and y-axis, respectively.
+    """
+    def __init__(self, grid_size=(101, 101)):
         self.grid_size = grid_size
 
         self.p0 = (+3.0, -3.0)  # Source center in potential field.
@@ -189,11 +203,11 @@ class RibeiroEtal2016Dataset:
         self.lb, self.ub = (-6.0, 6.0)
 
         x = np.linspace(self.lb, self.ub, self.grid_size[0])
-        y = np.linspace(self.lb, self.ub, self.grid_size[0])
+        y = np.linspace(self.lb, self.ub, self.grid_size[1])
 
         self.xx, self.yy = np.meshgrid(x, y)
 
-    def sample_phi(self):
+    def generate_phi_on_grid(self):
         x0, y0 = self.p0
         x1, y1 = self.p1
 
@@ -203,7 +217,7 @@ class RibeiroEtal2016Dataset:
         sink = -np.exp(-0.5 * ((xx-x1)**2 + (yy-y1)**2))
         return source + sink
 
-    def sample_psi(self):
+    def generate_psi_on_grid(self):
         xx, yy = self.xx, self.yy
         x2, y2 = self.p2
 
@@ -217,7 +231,7 @@ class RibeiroEtal2016Dataset:
         fig : plt.Figure
             Handle to matplotlib Figure object.
         """
-        phi = self.sample_phi()
+        phi = self.generate_phi_on_grid()
 
         fig = plt.figure()
         plt.pcolormesh(self.xx, self.yy, phi)
@@ -236,7 +250,7 @@ class RibeiroEtal2016Dataset:
         fig : plt.Figure
             Handle to matplotlib Figure object.
         """
-        psi = self.sample_psi()
+        psi = self.generate_psi_on_grid()
 
         fig = plt.figure()
         plt.pcolormesh(self.xx, self.yy, psi)
@@ -246,3 +260,63 @@ class RibeiroEtal2016Dataset:
         plt.tight_layout(pad=0.1)
 
         return fig
+
+    def generate_potential_velocity_on_grid(self):
+        """Return u, v for potential field."""
+        x0, y0 = self.p0
+        x1, y1 = self.p1
+
+        xx, yy = self.xx, self.yy
+
+        source = np.exp(-0.5 * ((xx-x0)**2 + (yy-y0)**2))
+        sink = -np.exp(-0.5 * ((xx-x1)**2 + (yy-y1)**2))
+
+        # Derivatives of the expression inside Gaussians:
+        dexp0_dx = -(xx-x0)
+        dexp1_dx = -(xx-x1)
+        dexp0_dy = -(yy-y0)
+        dexp1_dy = -(yy-y1)
+
+        u = source * dexp0_dx + sink * dexp1_dx
+        v = source * dexp0_dy + sink * dexp1_dy
+
+        return u, v
+
+    def generate_solenoidal_velocity_on_grid(self):
+        """Return u, v for potential field."""
+        x2, y2 = self.p2
+
+        xx, yy = self.xx, self.yy
+
+        psi = np.exp(-0.5 * ((xx-x2)**2 + (yy - y2)**2))
+
+        # Derivatives of the expression inside the Gaussian:
+        dpsi_dx = -(xx-x2)
+        dpsi_dy = -(yy-y2)
+
+        u = -psi * dpsi_dy
+        v = +psi * dpsi_dx
+
+        return u, v
+
+    def compute_inner_product(self):
+        """Compute inner product of subfields."""
+
+        u_pot, v_pot = self.generate_potential_velocity_on_grid()
+        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid()
+
+        vel_pot = np.column_stack((
+            np.reshape(u_pot, (-1, 1)),
+            np.reshape(v_pot, (-1, 1)),
+        ))
+
+        vel_sol = np.column_stack((
+            np.reshape(u_sol, (-1, 1)),
+            np.reshape(v_sol, (-1, 1)),
+        ))
+
+        dot_prod_pw = np.sum(vel_pot * vel_sol, axis=1)
+
+        ip = np.mean(dot_prod_pw)
+
+        return ip
