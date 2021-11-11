@@ -10,6 +10,9 @@ from sklearn.preprocessing import StandardScaler
 
 from hhpinn.scoring import mse
 
+from ._hhpinn2d import HHPINN2D
+from ._sequentialhhpinn2d import SequentialHHPINN2D
+
 
 class StreamFunctionPINN:
     """Physics-informed neural network for divergence-free 2D vector fields."""

@@ -5,5 +5,4 @@ from . import datasets
 from . import models
 from . import plotting
 
-from .models import StreamFunctionPINN
-from ._hhpinn2d import HHPINN2D
+from .models import StreamFunctionPINN, HHPINN2D, SequentialHHPINN2D
