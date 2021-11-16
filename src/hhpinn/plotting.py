@@ -23,6 +23,9 @@ except (ImportError, NameError):
     plt.style.use("seaborn-paper")
     matplotlib.rcParams["figure.figsize"] = (6, 3.7)
 
+FIGSIZE_DEFAULT = matplotlib.rcParams["figure.figsize"]
+FIGSIZE_WIDE = (1.5*FIGSIZE_DEFAULT[0], FIGSIZE_DEFAULT[1])
+
 
 def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     if len(N) != 2 or len(domain) != 2:
