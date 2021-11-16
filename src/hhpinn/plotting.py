@@ -83,6 +83,71 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
     fig.tight_layout(pad=0.1)
 
 
+def plot_true_and_pred_stream_fields(grid_size, domain, x, true_u, pred_u):
+    """Plot true and predicted stream fields `true_u` and `pred_u`.
+
+    Parameters
+    ----------
+    grid_size : tuple (nx: int, ny: int)
+        Grid size.
+    domain : tuple (Lx, Ly)
+        Domain size.
+    x, true_u, pred_u : ndarray (nx*ny, 2)
+        Locations, true and predicted vector fields.
+
+    """
+    if len(grid_size) != 2 or len(domain) != 2:
+        raise ValueError("Should be two-dimensional")
+
+    if x.shape[1] != 2:
+        raise ValueError("Should be two-dimensional")
+
+    if true_u.shape != x.shape:
+        raise ValueError("Shape mismatch")
+
+    if pred_u.shape != x.shape:
+        raise ValueError("Shape mismatch")
+
+    X = np.reshape(x[:, 0], grid_size)
+    Y = np.reshape(x[:, 1], grid_size)
+    true_U = np.reshape(true_u[:, 0], grid_size)
+    true_V = np.reshape(true_u[:, 1], grid_size)
+    pred_U = np.reshape(pred_u[:, 0], grid_size)
+    pred_V = np.reshape(pred_u[:, 1], grid_size)
+
+    true_speed = np.sqrt(true_U**2 + true_V**2)
+    pred_speed = np.sqrt(pred_U**2 + pred_V**2)
+    true_lw = 5.0 * true_speed / true_speed.max()
+    pred_lw = 5.0 * pred_speed / pred_speed.max()
+
+    fig, ax = plt.subplots(1, 2, figsize=FIGSIZE_WIDE)
+
+    kw_props = dict(
+        color="k",
+        density=1.0,
+        arrowstyle="->",
+        arrowsize=1,
+    )
+
+    ax[0].streamplot(X, Y, true_U, true_V, linewidth=true_lw, **kw_props)
+    ax[0].set_xlabel("$x_1$")
+    ax[0].set_ylabel("$x_2$")
+    ax[0].set_xlim(-0.02*domain[0], 1.02*domain[0])
+    ax[0].set_ylim(-0.02*domain[1], 1.02*domain[1])
+    if 0.98 <= domain[0] / domain[1] <= 1.02:
+        ax[0].set_aspect("equal")
+
+    ax[1].streamplot(X, Y, pred_U, pred_V, linewidth=pred_lw, **kw_props)
+    ax[1].set_xlabel("$x_1$")
+    ax[1].set_ylabel("$x_2$")
+    ax[1].set_xlim(-0.02*domain[0], 1.02*domain[0])
+    ax[1].set_ylim(-0.02*domain[1], 1.02*domain[1])
+    if 0.98 <= domain[0] / domain[1] <= 1.02:
+        ax[1].set_aspect("equal")
+
+    fig.tight_layout(pad=0.1)
+
+
 def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None,
                         vmax=None, cbar_label=None):
     assert inputs.ndim == 2
