@@ -393,12 +393,14 @@ class SequentialHHPINN2D:
         # Load Keras model if its folder exists.
         keras_model_phi = os.path.join(dirname, "model_phi")
         if os.path.exists(keras_model_phi):
-            obj.model_phi = tf.keras.models.load_model(keras_model_phi)
+            obj.model_phi = tf.keras.models.load_model(keras_model_phi,
+                                                       compile=False)
 
         # Load Keras model if its folder exists.
         keras_model_psi = os.path.join(dirname, "model_psi")
         if os.path.exists(keras_model_psi):
-            obj.model_psi = tf.keras.models.load_model(keras_model_psi)
+            obj.model_psi = tf.keras.models.load_model(keras_model_psi,
+                                                       compile=False)
 
         history_file = os.path.join(dirname, "history.pkl")
         if os.path.exists(history_file):
