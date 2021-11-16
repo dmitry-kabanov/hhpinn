@@ -22,6 +22,7 @@ from collections import namedtuple
 from typing import List
 
 from hhpinn.models import SequentialHHPINN2D
+from hhpinn.plotting import plot_true_and_pred_stream_fields
 from hhpinn.utils import render_figure
 from hhpinn.scoring import mse, rel_pw_error
 
@@ -304,7 +305,7 @@ render_figure(
 )
 
 # %% [markdown]
-# ## Predicted fields of the first, last, and best models
+# ## True and predicted fields: first, last, and best models
 
 # %%
 model_first = models[0]
@@ -321,24 +322,27 @@ pred_u_best, pred_u_best_curl_free, pred_u_best_div_free = model_best.predict(
 )
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_first)
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u, pred_u_first)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-model=first.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-model=first.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_last)
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u, pred_u_last)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-model=last.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-model=last.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_best)
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u, pred_u_best)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-model=best.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-model=best.pdf"),
     save=args["save"],
 )
 
@@ -346,69 +350,63 @@ render_figure(
 # ## True and predicted best field for potential (curl-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free)
-
-render_figure(
-    to_file=os.path.join("_assets", "true-field-curl-free.pdf"),
-    save=args["save"],
-)
-
-hhpinn.plotting.plot_stream_field_2D(
-    TEST_GRID_SIZE, ds.domain, test_x, pred_u_first_curl_free
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free, pred_u_first_curl_free
 )
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-curl-free-model=first.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-curl-free-model=first.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(
-    TEST_GRID_SIZE, ds.domain, test_x, pred_u_last_curl_free
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free, pred_u_last_curl_free
 )
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-curl-free-model=last.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-curl-free-model=last.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(
-    TEST_GRID_SIZE, ds.domain, test_x, pred_u_best_curl_free
+
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free, pred_u_best_curl_free
 )
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-curl-free-model=best.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-curl-free-model=best.pdf"),
     save=args["save"],
 )
+
 
 # %% [markdown]
 # ## True and predicted best field for solenoidal (div-free) part
 
 # %%
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free)
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free, pred_u_first_div_free
+)
 
 render_figure(
-    to_file=os.path.join("_assets", "true-field-div-free.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-div-free-model=first.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_first_div_free)
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free, pred_u_last_div_free
+)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-div-free-model=first.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-div-free-model=last.pdf"),
     save=args["save"],
 )
 
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_last_div_free)
-
-render_figure(
-    to_file=os.path.join("_assets", "pred-field-div-free-model=last.pdf"),
-    save=args["save"],
+plot_true_and_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free, pred_u_best_div_free
 )
 
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, pred_u_best_div_free)
-
 render_figure(
-    to_file=os.path.join("_assets", "pred-field-div-free-model=best.pdf"),
+    to_file=os.path.join("_assets", "true-vs-pred-div-free-model=best.pdf"),
     save=args["save"],
 )
 
