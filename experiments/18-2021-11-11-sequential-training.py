@@ -141,122 +141,8 @@ for i, __ in enumerate(CONFIGS):
     m = SequentialHHPINN2D.load(RESULT_MODEL_TEMPLATE.format(i))
     models.append(m)
 
-# %%
-# Define styles
-styles = ["-", "--", "-.", ":", (0, (1, 1)), (0, (5, 5)), (0, (8, 8))]
-# Step between epochs for plotting.
-step = 1
-
 # %% [markdown]
-# ## Plot loss history
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["loss"]) + 1, step),
-        models[i].history["loss"][::step],
-        linestyle=styles[i],
-        label=str(c),
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-render_figure(to_file=os.path.join("_assets", "loss-history.pdf"), save=args["save"])
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["misfit"]) + 1, step),
-        models[i].history["misfit"][::step],
-        linestyle=styles[i],
-        label=str(c),
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Misfit loss")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["sobolev4"]) + 1, step),
-        models[i].history["sobolev4"][::step],
-        linestyle=styles[i],
-        label=str(c),
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Sobolev4 loss")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-# %% [markdown]
-# ## Plot validation loss history
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["val_loss"]) + 1, step),
-        models[i].history["val_loss"][::step],
-        linestyle=styles[i],
-        label=str(c),
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Validation loss")
-plt.legend(loc="upper left")
-plt.tight_layout(pad=0.3)
-
-render_figure(
-    to_file=os.path.join("_assets", "val-loss-history.pdf"), save=args["save"]
-)
-
-
-# %% [markdown]
-# ## Plot gradient infinity norm during training
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["grad_phi_inf_norm"]) + 1, step),
-        models[i].history["grad_phi_inf_norm"][::step],
-        linestyle=styles[i],
-        label=c,
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Gradient phi Inf norm")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-render_figure(
-    to_file=os.path.join("_assets", "grad-phi-inf-history.pdf"), save=args["save"]
-)
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["grad_psi_inf_norm"]) + 1, step),
-        models[i].history["grad_psi_inf_norm"][::step],
-        linestyle=styles[i],
-        label=c,
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Gradient psi Inf norm")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-render_figure(
-    to_file=os.path.join("_assets", "grad-psi-inf-history.pdf"), save=args["save"]
-)
-
-# %% [markdown]
-# ## Errors of all models
+# ## MSE of all models
 
 # %%
 error_mse_list = []
@@ -290,19 +176,10 @@ render_figure(
 # change from one run to another due to randomness in simulations:
 # all models are initialized randomly and randomness is different for each
 # model.
-# My observation is that the best coefficient with Sobolev4 regularizer
-# for the solenoidal part is equal to 1e-4 or 1e-3 in all runs.
-
-# %% [markdown]
-# ## True full field
-
-# %%
-hhpinn.plotting.plot_stream_field_2D(TEST_GRID_SIZE, ds.domain, test_x, test_u)
-
-render_figure(
-    to_file=os.path.join("_assets", "true-field.pdf"),
-    save=args["save"],
-)
+#
+# We can see here, that all errors are significantly larger than for the
+# simultaneous model with orthogonality regularizer, where the best error was
+# about 0.2.
 
 # %% [markdown]
 # ## True and predicted fields: first, last, and best models
@@ -527,3 +404,5 @@ print(f"Inner product, last model: {ip_field_last.mean():.3f}")
 ip_field_best = model_best.compute_inner_product(test_x)
 hhpinn.plotting.plot_error_field_2D(test_x, ip_field_best, TEST_GRID_SIZE)
 print(f"Inner product, best model: {ip_field_best.mean():.3f}")
+
+# %%
