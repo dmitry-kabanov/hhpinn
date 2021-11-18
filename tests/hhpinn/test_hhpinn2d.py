@@ -30,14 +30,15 @@ class TestHHPINN2D:
         SAVE_GRAD = 100
 
         sut = HHPINN2D(
-            hidden_layers=HIDDEN_LAYERS, epochs=EPOCHS,
+            hidden_layers=HIDDEN_LAYERS,
+            epochs=EPOCHS,
             l2=L2,
             s4=S4,
             optimizer=OPTIMIZER,
             learning_rate=LEARNING_RATE,
             preprocessing=PREPROCESSING,
             save_grad_norm=SAVE_GRAD_NORM,
-            save_grad=SAVE_GRAD
+            save_grad=SAVE_GRAD,
         )
 
         npt.assert_equal(sut.hidden_layers, HIDDEN_LAYERS)
@@ -203,7 +204,7 @@ class TestHHPINN2D:
                 dot_prod_pw[i] = np.dot(pred_u_poten[i], pred_u_solen[i])
             ip.append(np.mean(dot_prod_pw))
 
-        npt.assert_allclose(dot_prod_pw, 0.0, rtol=1e-6, atol=2e-7)
+        npt.assert_allclose(ip, 0.0, rtol=1e-6, atol=2e-7)
 
     def test_prediction_total_field_is_sum_of_components(self):
         model = HHPINN2D(epochs=3)
