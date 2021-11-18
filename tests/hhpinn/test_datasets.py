@@ -41,8 +41,8 @@ class TestRibeiroEtal2016:
 
         assert ds.grid_size == grid_size
 
-        phi = ds.sample_phi()
-        psi = ds.sample_psi()
+        phi = ds.generate_phi_on_grid()
+        psi = ds.generate_psi_on_grid()
 
         assert phi.shape == grid_size
         assert psi.shape == grid_size
@@ -64,7 +64,7 @@ class TestRibeiroEtal2016:
 
         phi_samples = []
         for i in range(n_samples):
-            phi_i = ds.sample_phi()
+            phi_i = ds.generate_phi_on_grid()
             phi_samples.append(phi_i)
 
         phi_average = np.mean(phi_samples, axis=0)
@@ -83,7 +83,7 @@ class TestRibeiroEtal2016:
 
         psi_samples = []
         for i in range(n_samples):
-            psi_i = ds.sample_psi()
+            psi_i = ds.generate_psi_on_grid()
             psi_samples.append(psi_i)
 
         psi_average = np.mean(psi_samples, axis=0)
