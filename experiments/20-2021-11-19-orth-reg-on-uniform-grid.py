@@ -117,6 +117,7 @@ if not os.listdir(OUTDIR):
             s4=0,
             ip=c.ip,
             G=8,
+            use_uniform_grid_for_regs=True,
             optimizer=c.opt,
             learning_rate=lr,
             save_grad_norm=True,

@@ -28,6 +28,7 @@ class HHPINN2D:
         s4=0.0,
         ip=0.0,
         G=8,
+        use_uniform_grid_for_regs=True,
         optimizer="sgd",
         learning_rate=0.01,
         preprocessing="identity",
@@ -40,12 +41,13 @@ class HHPINN2D:
         self.s4 = s4
         self.ip = ip
         self.G = G
+        self.use_uniform_grid_for_regs = use_uniform_grid_for_regs
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 11
+        self._nparams = 12
 
         self.model_phi: tf.keras.Model = None
         self.model_psi: tf.keras.Model = None
@@ -61,6 +63,7 @@ class HHPINN2D:
             "s4": self.s4,
             "ip": self.ip,
             "G": self.G,
+            "use_uniform_grid_for_regs": self.use_uniform_grid_for_regs,
             "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
@@ -164,6 +167,17 @@ class HHPINN2D:
 
         G = self.G
 
+        xx = np.linspace(xmin[0], xmax[0], num=G)
+        yy = np.linspace(xmin[1], xmax[1], num=G)
+        XX, YY = np.meshgrid(xx, yy)
+        x_colloc_grid = tf.Variable(
+            np.column_stack(
+                (np.reshape(XX, (-1, 1)), np.reshape(YY, (-1, 1)))
+            ),
+            dtype=tf.float32,
+            trainable=False,
+        )
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
                 with tf.GradientTape(
@@ -185,17 +199,8 @@ class HHPINN2D:
                 u_pred = div_free_part + curl_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
-                if True:
-                    xx = np.linspace(xmin[0], xmax[0], num=G)
-                    yy = np.linspace(xmin[1], xmax[1], num=G)
-                    XX, YY = np.meshgrid(xx, yy)
-                    x_colloc = tf.Variable(
-                        np.column_stack(
-                            (np.reshape(XX, (-1, 1)), np.reshape(YY, -1, 1))
-                        ),
-                        dtype=tf.float32,
-                        trainable=False,
-                    )
+                if self.use_uniform_grid_for_regs:
+                    x_colloc = x_colloc_grid
                 else:
                     xmin = (0.0, 0.0)
                     xmax = (2 * np.pi, 2 * np.pi)
@@ -278,11 +283,14 @@ class HHPINN2D:
 
                 ip_reg = 0.0
                 if self.ip:
-                    x_colloc_ip = tf.Variable(
-                        np.random.uniform(xmin, xmax, size=(256, 2)),
-                        dtype=tf.float32,
-                        trainable=False,
-                    )
+                    if self.use_uniform_grid_for_regs:
+                        x_colloc_ip = x_colloc_grid
+                    else:
+                        x_colloc_ip = tf.Variable(
+                            np.random.uniform(xmin, xmax, size=(256, 2)),
+                            dtype=tf.float32,
+                            trainable=False,
+                        )
 
                     with tf.GradientTape(
                         persistent=True, watch_accessed_variables=False
