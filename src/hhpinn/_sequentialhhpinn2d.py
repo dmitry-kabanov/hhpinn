@@ -173,7 +173,7 @@ class SequentialHHPINN2D:
                     psi = model_psi(x_train)
 
                 # Divergence-free part in 2D is defined by stream function:
-                # u = -∂psi_∂y, v = +∂psi_∂x.
+                # u = +∂psi_∂y, v = -∂psi_∂x.
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
