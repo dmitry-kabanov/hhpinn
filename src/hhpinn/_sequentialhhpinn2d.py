@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple, Union
 from sklearn.preprocessing import StandardScaler
 
 from hhpinn.scoring import mse
+from hhpinn._sobolev3reg import sobolev3reg
 
 
 class SequentialHHPINN2D:
@@ -28,6 +29,7 @@ class SequentialHHPINN2D:
         hidden_layers=[10],
         epochs=50,
         l2=0.0,
+        s3=0.0,
         s4=0.0,
         ip=0.0,
         optimizer="sgd",
@@ -39,6 +41,7 @@ class SequentialHHPINN2D:
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.l2 = l2
+        self.s3 = s3
         self.s4 = s4
         self.ip = ip
         self.optimizer = optimizer
@@ -46,7 +49,7 @@ class SequentialHHPINN2D:
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 10
+        self._nparams = 11
 
         self.model_phi: tf.keras.Model = None
         self.model_psi: tf.keras.Model = None
@@ -59,6 +62,7 @@ class SequentialHHPINN2D:
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
             "l2": self.l2,
+            "s3": self.s3,
             "s4": self.s4,
             "ip": self.ip,
             "optimizer": self.optimizer,
@@ -133,6 +137,9 @@ class SequentialHHPINN2D:
         if self.l2 < 0.0:
             raise ValueError("Multiplier of L2 regularizer should be non-negative")
 
+        if self.s3 < 0.0:
+            raise ValueError("Muliplier of S3 regularizer should be non-negative")
+
         if self.s4 < 0.0:
             raise ValueError("Muliplier of S4 regularizer should be non-negative")
 
@@ -149,7 +156,10 @@ class SequentialHHPINN2D:
         self.opt_psi = opt_psi
 
         # Dictionary for recording training history.
-        self.history = {"loss": [], "misfit": [], "sobolev4": []}
+        self.history = {
+            "loss": [], "misfit": [], "sobolev4": [], "sobolev3_phi": [],
+            "sobolev3_psi": [],
+        }
 
         if self.save_grad_norm:
             self.history["grad_phi_inf_norm"] = []
@@ -165,6 +175,20 @@ class SequentialHHPINN2D:
 
         tape_kw = dict(persistent=True, watch_accessed_variables=False)
 
+        s3reg_phi_fn = sobolev3reg(model_phi)
+        s3reg_psi_fn = sobolev3reg(model_psi)
+
+        G = 8
+        xx = np.linspace(xmin[0], xmax[0], num=G)
+        yy = np.linspace(xmin[1], xmax[1], num=G)
+        XX, YY = np.meshgrid(xx, yy)
+
+        x_colloc = tf.Variable(
+            np.column_stack((np.reshape(XX, (-1, 1)), np.reshape(YY, (-1, 1)))),
+            dtype=tf.float32
+        )
+        assert x_colloc.shape == (G*G, 2)
+
         # Training loop for solenoidal (\psi) network.
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
@@ -179,7 +203,10 @@ class SequentialHHPINN2D:
 
                 u_pred = div_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
-                loss = tf.reduce_mean(misfit)
+
+                s3reg_psi = s3reg_psi_fn(x_colloc)
+                loss = tf.reduce_mean(misfit) + \
+                    self.s3 * tf.reduce_mean(s3reg_psi)
 
             grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
             opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
@@ -208,7 +235,10 @@ class SequentialHHPINN2D:
 
                 u_pred = u_pot
                 misfit = tf.norm(u_pred - y_train_resid, 2, axis=1) ** 2
-                loss = tf.reduce_mean(misfit)
+
+                s3reg_phi = s3reg_phi_fn(x_colloc)
+                loss = tf.reduce_mean(misfit) + \
+                    self.s3 * tf.reduce_mean(s3reg_phi)
 
             grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
             opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
