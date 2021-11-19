@@ -6,6 +6,21 @@ import tensorflow as tf
 
 
 def sobolev3reg(model):
+    """Compute Sobolev H3 regularizer for the function `model`.
+
+    Usage:
+
+        s3r = sobolev3reg(model)
+        result = s3r(pts)
+
+    that is, s3r is the function that knows the model and, when invoked,
+    evaluates the regularizer at points `pts`.
+
+    Parameters
+    ----------
+    model : Keras model
+        Must implement a mathematical function that maps R^2 to R.
+    """
     def compute(pts):
         with tf.GradientTape(
             persistent=True, watch_accessed_variables=False
