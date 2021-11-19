@@ -162,6 +162,8 @@ class HHPINN2D:
         if validation_data:
             self.history["val_loss"] = []
 
+        G = self.G
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
                 with tf.GradientTape(
