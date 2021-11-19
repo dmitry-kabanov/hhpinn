@@ -190,9 +190,9 @@ class HHPINN2D:
                     yy = np.linspace(xmin[1], xmax[1], num=G)
                     XX, YY = np.meshgrid(xx, yy)
                     x_colloc = tf.Variable(
-                        np.column_stack((
-                            np.reshape(XX, (-1, 1)), np.reshape(YY,
-                                                                             -1, 1))),
+                        np.column_stack(
+                            (np.reshape(XX, (-1, 1)), np.reshape(YY, -1, 1))
+                        ),
                         dtype=tf.float32,
                         trainable=False,
                     )
