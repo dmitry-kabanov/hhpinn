@@ -7,6 +7,7 @@ import tensorflow as tf
 from typing import Dict, List, Tuple, Union
 
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import Model
 
 from hhpinn.scoring import mse
 from hhpinn._sobolev3reg import sobolev3reg
@@ -51,8 +52,8 @@ class SequentialHHPINN2D:
         self.save_grad = save_grad
         self._nparams = 11
 
-        self.model_phi: tf.keras.Model = None
-        self.model_psi: tf.keras.Model = None
+        self.model_phi: Union[Model, None] = None
+        self.model_psi: Union[Model, None] = None
         self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
         self.transformer_output = None
@@ -75,7 +76,7 @@ class SequentialHHPINN2D:
 
         return params
 
-    def build_model(self) -> tf.keras.models.Model:
+    def build_model(self) -> Model:
         """Build and return Keras model with given hyperparameters."""
         inp = tf.keras.layers.Input(2)
         x = inp
@@ -96,7 +97,7 @@ class SequentialHHPINN2D:
             kernel_regularizer=tf.keras.regularizers.l2(l2=self.l2),
         )(x)
 
-        model = tf.keras.models.Model(inputs=inp, outputs=out)
+        model = Model(inputs=inp, outputs=out)
 
         return model
 
