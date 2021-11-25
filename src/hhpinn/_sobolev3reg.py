@@ -61,11 +61,11 @@ def sobolev3reg(model):
         reg_3 = (
             d2u_dxx ** 2
             + d2u_dxy ** 2
-            + d2u_dxx ** 2
+            + d2u_dyx ** 2
             + d2u_dyy ** 2
             + d2v_dxx ** 2
             + d2v_dxy ** 2
-            + d2v_dxx ** 2
+            + d2v_dyx ** 2
             + d2v_dyy ** 2
         )
 
