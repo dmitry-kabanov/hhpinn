@@ -29,4 +29,7 @@ class Transformer:
         return xs, ys
     
     def transform(self, x):
+        if self.preprocessing == "identity":
+            return x
+
         return self.transformer_x.transform(x)

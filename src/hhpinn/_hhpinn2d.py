@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple, Union
 from sklearn.preprocessing import StandardScaler
 
 from hhpinn.scoring import mse
+from hhpinn.transformer import Transformer
 
 
 class HHPINN2D:
@@ -49,11 +50,10 @@ class HHPINN2D:
         self.save_grad = save_grad
         self._nparams = 12
 
-        self.model_phi: tf.keras.Model = None
-        self.model_psi: tf.keras.Model = None
+        self.model_phi: Union[tf.keras.Model, None] = None
+        self.model_psi: Union[tf.keras.Model, None] = None
         self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
-        self.transformer_output = None
 
     def get_params(self):
         params = {
@@ -74,7 +74,7 @@ class HHPINN2D:
 
         return params
 
-    def build_model(self) -> tf.keras.models.Model:
+    def build_model(self):
         """Build and return Keras model with given hyperparameters."""
         inp = tf.keras.layers.Input(2)
         x = inp
@@ -101,23 +101,9 @@ class HHPINN2D:
 
     def fit(self, x, y, validation_data=None):
         # Preprocess training data.
-        if self.preprocessing == "identity":
-            xs = x
-            ys = y
-        elif self.preprocessing == "standardization":
-            self.transformer = StandardScaler()
-            self.transformer.fit(x)
-            xs = self.transformer.transform(x)
-            ys = y
-        elif self.preprocessing == "standardization-both":
-            self.transformer = StandardScaler()
-            self.transformer.fit(x)
-            xs = self.transformer.transform(x)
-            self.transformer_output = StandardScaler()
-            self.transformer_output.fit(y)
-            ys = self.transformer_output.transform(y)
-        else:
-            raise ValueError("Unknown values for preprocessing")
+        # (xs, ys): scaled versions of (x, y)
+        self.transformer = Transformer(self.preprocessing)
+        xs, ys = self.transformer.fit_transform(x, y)
 
         # Training data should be `tf.Variable`s, so that the GradientTape
         # could watch them automatically.
@@ -199,88 +185,6 @@ class HHPINN2D:
                 u_pred = div_free_part + curl_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
-                if self.use_uniform_grid_for_regs:
-                    x_colloc = x_colloc_grid
-                else:
-                    xmin = (0.0, 0.0)
-                    xmax = (2 * np.pi, 2 * np.pi)
-                    x_colloc = tf.Variable(
-                        np.random.uniform(xmin, xmax, size=(256, 2)),
-                        dtype=tf.float32,
-                        trainable=False,
-                    )
-
-                with tf.GradientTape(
-                    persistent=True, watch_accessed_variables=False
-                ) as t4:
-                    t4.watch(x_colloc)
-                    with tf.GradientTape(
-                        persistent=True, watch_accessed_variables=False
-                    ) as t3:
-                        t3.watch(x_colloc)
-                        with tf.GradientTape(
-                            persistent=True, watch_accessed_variables=False
-                        ) as t2:
-                            t2.watch(x_colloc)
-                            with tf.GradientTape(
-                                persistent=True, watch_accessed_variables=False
-                            ) as t1:
-                                t1.watch(x_colloc)
-                                psi = model_psi(x_colloc)
-
-                            # Compute velocity predictions from the stream function `psi`.
-                            stream_func_grad = t1.gradient(psi, x_colloc)
-
-                            y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-                            u, v = tf.split(y_pred, 2, axis=1)
-
-                        grad_u = t2.gradient(u, x_colloc)
-                        grad_v = t2.gradient(v, x_colloc)
-
-                        du_dx, du_dy = tf.split(grad_u, 2, axis=1)
-                        dv_dx, dv_dy = tf.split(grad_v, 2, axis=1)
-
-                    grad_du_dx = t3.gradient(du_dx, x_colloc)
-                    grad_du_dy = t3.gradient(du_dy, x_colloc)
-                    grad_dv_dx = t3.gradient(dv_dx, x_colloc)
-                    grad_dv_dy = t3.gradient(dv_dy, x_colloc)
-
-                    d2u_dxx, d2u_dxy = tf.split(grad_du_dx, 2, axis=1)
-                    d2u_dyx, d2u_dyy = tf.split(grad_du_dy, 2, axis=1)
-                    d2v_dxx, d2v_dxy = tf.split(grad_dv_dx, 2, axis=1)
-                    d2v_dyx, d2v_dyy = tf.split(grad_dv_dy, 2, axis=1)
-
-                    # reg_3 = (
-                    #     d2u_dxx ** 2
-                    #     + d2u_dxy ** 2
-                    #     + d2u_dxx ** 2
-                    #     + d2u_dyy ** 2
-                    #     + d2v_dxx ** 2
-                    #     + d2v_dxy ** 2
-                    #     + d2v_dxx ** 2
-                    #     + d2v_dyy ** 2
-                    # )
-
-                grad_d2u_dxx = t4.gradient(d2u_dxx, x_colloc)
-                grad_d2u_dxy = t4.gradient(d2u_dxy, x_colloc)
-                grad_d2u_dyx = t4.gradient(d2u_dyx, x_colloc)
-                grad_d2u_dyy = t4.gradient(d2u_dyy, x_colloc)
-                grad_d2v_dxx = t4.gradient(d2v_dxx, x_colloc)
-                grad_d2v_dxy = t4.gradient(d2v_dxy, x_colloc)
-                grad_d2v_dyx = t4.gradient(d2v_dyx, x_colloc)
-                grad_d2v_dyy = t4.gradient(d2v_dyy, x_colloc)
-
-                reg_4 = (
-                    tf.reduce_sum(grad_d2u_dxx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dxy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2u_dyy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dxy ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyx ** 2, axis=1)
-                    + tf.reduce_sum(grad_d2v_dyy ** 2, axis=1)
-                )
-
                 ip_reg = 0.0
                 if self.ip:
                     if self.use_uniform_grid_for_regs:
@@ -312,7 +216,6 @@ class HHPINN2D:
 
                 loss = (
                     tf.reduce_mean(misfit)
-                    + self.s4 * tf.reduce_mean(reg_4)
                     + self.ip * tf.reduce_mean(ip_reg)
                 )
 
@@ -324,7 +227,6 @@ class HHPINN2D:
 
             self.history["loss"].append(loss.numpy())
             self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
-            self.history["sobolev4"].append(tf.reduce_mean(reg_4).numpy())
 
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
@@ -350,10 +252,12 @@ class HHPINN2D:
                 self.history["val_loss"].append(val_loss)
 
     def predict(self, x_new, return_separate_fields=False):
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
+
+        x_new_s = self.transformer.transform(x_new)
 
         x_var = tf.Variable(x_new_s, dtype=tf.float32)
         with tf.GradientTape(persistent=True, watch_accessed_variables=False) as tape:
@@ -386,10 +290,12 @@ class HHPINN2D:
         return result_pot, result_sol
 
     def compute_divergence(self, x_new):
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
+
+        x_new_s = self.transformer.transform(x_new)
 
         # We need input as `tf.Variable` to be able to record operations
         # inside a gradient tape.
@@ -440,10 +346,12 @@ class HHPINN2D:
         the mixed derivatives do not depend on the order of differentiation.
 
         """
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
+
+        x_new_s = self.transformer.transform(x_new)
 
         # We need input as `tf.Variable` to be able to record operations
         # inside a gradient tape.
@@ -508,11 +416,6 @@ class HHPINN2D:
             with open(tfile, "wb") as fh:
                 pickle.dump(self.transformer, fh)
 
-        if self.transformer_output:
-            tfile = os.path.join(dirname, "transformer_output.pkl")
-            with open(tfile, "wb") as fh:
-                pickle.dump(self.transformer_output, fh)
-
     @classmethod
     def load(cls, dirname):
         filename = os.path.join(dirname, "model_params.pkl")
@@ -540,10 +443,5 @@ class HHPINN2D:
         if os.path.exists(tfile):
             with open(tfile, "rb") as fh:
                 obj.transformer = pickle.load(fh)
-
-        tfile = os.path.join(dirname, "transformer_output.pkl")
-        if os.path.exists(tfile):
-            with open(tfile, "rb") as fh:
-                obj.transformer_output = pickle.load(fh)
 
         return obj
