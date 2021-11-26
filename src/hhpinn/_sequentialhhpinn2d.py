@@ -6,11 +6,11 @@ import tensorflow as tf
 
 from typing import Dict, List, Tuple, Union
 
-from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import Model
 
 from hhpinn.scoring import mse
 from hhpinn._sobolev3reg import sobolev3reg
+from hhpinn.transformer import Transformer
 
 
 class SequentialHHPINN2D:
@@ -103,23 +103,8 @@ class SequentialHHPINN2D:
 
     def fit(self, x, y, validation_data=None):
         # Preprocess training data.
-        if self.preprocessing == "identity":
-            xs = x
-            ys = y
-        elif self.preprocessing == "standardization":
-            self.transformer = StandardScaler()
-            self.transformer.fit(x)
-            xs = self.transformer.transform(x)
-            ys = y
-        elif self.preprocessing == "standardization-both":
-            self.transformer = StandardScaler()
-            self.transformer.fit(x)
-            xs = self.transformer.transform(x)
-            self.transformer_output = StandardScaler()
-            self.transformer_output.fit(y)
-            ys = self.transformer_output.transform(y)
-        else:
-            raise ValueError("Unknown values for preprocessing")
+        self.transformer = Transformer(self.preprocessing)
+        xs, ys = self.transformer.fit_transform(x, y)
 
         # Training data should be `tf.Variable`s, so that the GradientTape
         # could watch them automatically.
@@ -252,11 +237,10 @@ class SequentialHHPINN2D:
     def predict(self, x_new, return_separate_fields=False):
         if (self.model_phi is None) or (self.model_psi is None):
             raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
 
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        x_new_s = self.transformer.transform(x_new)
 
         x_var = tf.Variable(x_new_s, dtype=tf.float32)
         with tf.GradientTape(persistent=True, watch_accessed_variables=False) as tape:
@@ -273,7 +257,6 @@ class SequentialHHPINN2D:
 
         if self.preprocessing == "standardization-both":
             raise ValueError("This is buggy, not completely implemented")
-            result = self.transformer_output.inverse_transform(result)
 
         if return_separate_fields:
             return result, curl_free_part.numpy(), div_free_part.numpy()
@@ -289,47 +272,43 @@ class SequentialHHPINN2D:
         return result_pot, result_sol
 
     def compute_divergence(self, x_new):
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
+
+        x_new_s = self.transformer.transform(x_new)
 
         # We need input as `tf.Variable` to be able to record operations
         # inside a gradient tape.
         x_var = tf.Variable(x_new_s, dtype=tf.float32)
         
-        if self.model_psi:
-            with tf.GradientTape(
-                persistent=True, watch_accessed_variables=False
-            ) as div_tape:
-                div_tape.watch(x_var)
-                with tf.GradientTape(watch_accessed_variables=False) as tape:
-                    tape.watch(x_var)
-                    psi = self.model_psi(x_var)
+        with tf.GradientTape(
+            persistent=True, watch_accessed_variables=False
+        ) as div_tape:
+            div_tape.watch(x_var)
+            with tf.GradientTape(watch_accessed_variables=False) as tape:
+                tape.watch(x_var)
+                psi = self.model_psi(x_var)
 
-                # Compute velocity predictions from the stream function `psi`.
-                stream_func_grad = tape.gradient(psi, x_var)
-                y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-                u, v = tf.split(y_pred, 2, axis=1)
+            # Compute velocity predictions from the stream function `psi`.
+            stream_func_grad = tape.gradient(psi, x_var)
+            y_pred = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+            u, v = tf.split(y_pred, 2, axis=1)
 
-            grad_u = div_tape.gradient(u, x_var)
-            grad_v = div_tape.gradient(v, x_var)
+        grad_u = div_tape.gradient(u, x_var)
+        grad_v = div_tape.gradient(v, x_var)
 
-            du_dx = grad_u[:, 0]
-            dv_dy = grad_v[:, 1]
+        du_dx = grad_u[:, 0]
+        dv_dy = grad_v[:, 1]
 
-            divergence = du_dx + dv_dy
+        divergence = du_dx + dv_dy
 
-            result = divergence.numpy()
+        result = divergence.numpy()
 
-            del div_tape
+        del div_tape
 
-            # if self.preprocessing == "standardization-both":
-            #     result = self.transformer_output.inverse_transform(result)
-
-            return result
-        else:
-            raise RuntimeError("You must call `fit` method first")
+        return result
 
     def compute_curl_of_potential_field(self, x_new):
         r"""Compute curl of potential field represented by \nabla \phi.
@@ -346,13 +325,12 @@ class SequentialHHPINN2D:
         the mixed derivatives do not depend on the order of differentiation.
 
         """
-        if self.model_phi is None:
-            raise RuntimeError("You must call the `fit` method first")
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
 
-        if self.preprocessing == "identity":
-            x_new_s = x_new
-        else:
-            x_new_s = self.transformer.transform(x_new)
+        x_new_s = self.transformer.transform(x_new)
 
         # We need input as `tf.Variable` to be able to record operations
         # inside a gradient tape.
@@ -381,9 +359,6 @@ class SequentialHHPINN2D:
         result = curl.numpy()
 
         del curl_tape
-
-        # if self.preprocessing == "standardization-both":
-        #     result = self.transformer_output.inverse_transform(result)
 
         return result
 
