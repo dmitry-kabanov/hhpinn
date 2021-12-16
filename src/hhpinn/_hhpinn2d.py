@@ -137,8 +137,10 @@ class HHPINN2D:
         self.opt_phi = opt_phi
         self.opt_psi = opt_psi
 
-        # Dictionary for recording training history.
-        self.history = {"loss": [], "misfit": [], "sobolev4": []}
+        # Nullify the dictionary for recording training history.
+        self.history = {
+            "loss": [], "misfit": [], "sobolev4": [], "ip": [],
+        }
 
         if self.save_grad_norm:
             self.history["grad_phi_inf_norm"] = []
@@ -185,7 +187,7 @@ class HHPINN2D:
                 u_pred = div_free_part + curl_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
-                ip_reg = 0.0
+                ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
                 if self.ip:
                     if self.use_uniform_grid_for_regs:
                         x_colloc_ip = x_colloc_grid
@@ -213,10 +215,11 @@ class HHPINN2D:
                     sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
                     ip_reg = tf.square(tf.reduce_sum(pot_part * sol_part, axis=1))
+                    ip_reg_mean = tf.reduce_mean(ip_reg)
 
                 loss = (
                     tf.reduce_mean(misfit)
-                    + self.ip * tf.reduce_mean(ip_reg)
+                    + self.ip * ip_reg_mean
                 )
 
             grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
@@ -227,6 +230,7 @@ class HHPINN2D:
 
             self.history["loss"].append(loss.numpy())
             self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
+            self.history["ip"].append(ip_reg_mean.numpy())
 
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
