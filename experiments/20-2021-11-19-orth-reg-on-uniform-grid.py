@@ -113,11 +113,11 @@ if not os.listdir(OUTDIR):
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=3000,
+            epochs=20000,
             l2=0,
             s4=0,
             ip=c.ip,
-            G=8,
+            G=16,
             use_uniform_grid_for_regs=True,
             optimizer=c.opt,
             learning_rate=lr,
