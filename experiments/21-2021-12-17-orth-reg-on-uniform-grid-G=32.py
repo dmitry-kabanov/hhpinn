@@ -417,8 +417,11 @@ err_u_first = rel_pw_error(test_u, pred_u_first)
 err_u_last = rel_pw_error(test_u, pred_u_last)
 err_u_best = rel_pw_error(test_u, pred_u_best)
 err_max = np.max((err_u_first, err_u_last, err_u_best))
+max_err_u_first = np.linalg.norm(err_u_first, np.Inf)
+max_err_u_last = np.linalg.norm(err_u_last, np.Inf)
+max_err_u_best = np.linalg.norm(err_u_best, np.Inf)
 
-print(f"Max relative pointwise error, first model: {err_u_first:.3f}")
+print(f"Max relative pointwise error, first model: {max_err_u_first:.3f}")
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_first,
@@ -433,7 +436,7 @@ render_figure(
     to_file=os.path.join("_assets", "error-field-model=first.pdf"), save=args["save"]
 )
 
-print(f"Max relative pointwise error, last model: {err_u_last:.3f}")
+print(f"Max relative pointwise error, last model: {max_err_u_last:.3f}")
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_last,
@@ -448,7 +451,7 @@ render_figure(
     to_file=os.path.join("_assets", "error-field-model=last.pdf"), save=args["save"]
 )
 
-print(f"Max relative pointwise error, best model: {err_u_best:.3f}")
+print(f"Max relative pointwise error, best model: {max_err_u_best:.3f}")
 hhpinn.plotting.plot_error_field_2D(
     test_x,
     err_u_best,
