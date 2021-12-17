@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 20-2021-10-25 Orthogonality of fields on uniform grid
+# # 20-2021-11-19 Orthogonality of fields on uniform grid
 #
 # I implement here a regularizer for orthogonality of the potential and
 # solenoidal fields in L2 sense (inner product of functions).
