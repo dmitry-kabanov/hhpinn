@@ -27,7 +27,7 @@ from typing import List
 from hhpinn import HHPINN2D
 from hhpinn.plotting import plot_true_and_pred_stream_fields
 from hhpinn.utils import render_figure
-from hhpinn.scoring import mse, rel_pw_error
+from hhpinn.scoring import mse, rel_mse, rel_pw_error
 
 
 # %% [markdown]
@@ -287,6 +287,46 @@ print("Best model index: ", best_model_idx)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-mse-vs-model.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
+# ## Errors of subfields
+
+# %%
+test_u_pot = test_u_curl_free
+test_u_sol = test_u_div_free
+pot_mse_list = []
+sol_mse_list = []
+print("Mean squared errors of potential subfield on test dataset")
+print("-----------------------------------")
+for i, (c, model) in enumerate(zip(CONFIGS, models)):
+    pred_pot, pred_sol = model.predict_separate_fields(test_x)
+    pot_mse = rel_mse(test_u_pot, pred_pot)
+    sol_mse = rel_mse(test_u_sol, pred_sol)
+    print("{:} Model {:44s} {:.2e} {:.2e}".format(i, str(c), pot_mse, sol_mse))
+    pot_mse_list.append(pot_mse)
+    sol_mse_list.append(pot_mse)
+
+plt.figure()
+plt.plot(pot_mse_list, "o")
+plt.xlabel("Model index")
+plt.ylabel("Prediction pot. MSE")
+plt.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-pot-mse-vs-model.pdf"),
+    save=args["save"],
+)
+
+plt.figure()
+plt.plot(sol_mse_list, "o")
+plt.xlabel("Model index")
+plt.ylabel("Prediction sol. MSE")
+plt.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-sol-mse-vs-model.pdf"),
     save=args["save"],
 )
 
