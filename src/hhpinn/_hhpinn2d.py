@@ -184,7 +184,7 @@ class HHPINN2D:
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
-                u_pred = div_free_part + curl_free_part
+                u_pred = curl_free_part + div_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
 
                 ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
