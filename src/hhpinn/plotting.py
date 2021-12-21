@@ -151,7 +151,7 @@ def plot_true_and_pred_stream_fields(grid_size, domain, x, true_u, pred_u):
 def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None,
                         vmax=None, cbar_label=None):
     assert inputs.ndim == 2
-    assert errors.ndim == 1
+    assert np.prod(errors.shape) == errors.shape[0]
     assert inputs.shape[1] == 2
 
     if len(locs):
