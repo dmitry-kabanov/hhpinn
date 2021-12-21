@@ -138,9 +138,10 @@ class HHPINN2D:
         self.opt_psi = opt_psi
 
         # Nullify the dictionary for recording training history.
-        self.history = {
-            "loss": [], "misfit": [], "sobolev4": [], "ip": [],
-        }
+        self.history["loss"] = []
+        self.history["misfit"] = []
+        self.history["sobolev4"] = []
+        self.history["ip"] = []
 
         if self.save_grad_norm:
             self.history["grad_phi_inf_norm"] = []
