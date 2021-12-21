@@ -52,7 +52,7 @@ class HHPINN2D:
 
         self.model_phi: Union[tf.keras.Model, None] = None
         self.model_psi: Union[tf.keras.Model, None] = None
-        self.history: Dict[str, Union[Dict, List]]
+        self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
 
     def get_params(self):
@@ -138,9 +138,10 @@ class HHPINN2D:
         self.opt_psi = opt_psi
 
         # Nullify the dictionary for recording training history.
-        self.history = {
-            "loss": [], "misfit": [], "sobolev4": [], "ip": [],
-        }
+        self.history["loss"] = []
+        self.history["misfit"] = []
+        self.history["sobolev4"] = []
+        self.history["ip"] = []
 
         if self.save_grad_norm:
             self.history["grad_phi_inf_norm"] = []
