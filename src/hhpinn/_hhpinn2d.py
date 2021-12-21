@@ -167,26 +167,26 @@ class HHPINN2D:
             trainable=False,
         )
 
+        tape_kw = dict(persistent=True, watch_accessed_variables=False)
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
-                with tf.GradientTape(
-                    persistent=True, watch_accessed_variables=False
-                ) as t1:
+                with tf.GradientTape(**tape_kw) as t1:
                     t1.watch(x_train)
                     phi = model_phi(x_train)
                     psi = model_psi(x_train)
 
-                # Potential (curl-free part) is a gradient of scalar-valued
-                # function phi.
+                # Potential (curl-free) part is the gradient of `phi`.
                 curl_free_part = t1.gradient(phi, x_train)
 
-                # Divergence-free part in 2D is defined by stream function:
-                # u = ∂psi_∂y, v = -∂psi_∂x.
+                # Soenlidal (divergence-free) part in 2D is defined
+                # by stream function: u = ∂psi_∂y, v = -∂psi_∂x.
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
 
                 u_pred = curl_free_part + div_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
+                misfit_mean = tf.reduce_mean(misfit)
 
                 ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
                 if self.ip:
@@ -219,7 +219,7 @@ class HHPINN2D:
                     ip_reg_mean = tf.reduce_mean(ip_reg)
 
                 loss = (
-                    tf.reduce_mean(misfit)
+                    misfit_mean
                     + self.ip * ip_reg_mean
                 )
 
@@ -230,7 +230,7 @@ class HHPINN2D:
             opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
 
             self.history["loss"].append(loss.numpy())
-            self.history["misfit"].append(tf.reduce_mean(misfit).numpy())
+            self.history["misfit"].append(misfit_mean.numpy())
             self.history["ip"].append(ip_reg_mean.numpy())
 
             print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
