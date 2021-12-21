@@ -294,6 +294,22 @@ class HHPINN2D:
 
         return result_pot, result_sol
 
+    def predict_scalar_fields(self, x_new):
+        if (self.model_phi is None) or (self.model_psi is None):
+            raise RuntimeError("You must call `fit` method first")
+        if self.transformer is None:
+            raise RuntimeError("You must call `fit` method first")
+
+        x_new_s = self.transformer.transform(x_new)
+
+        x_var = tf.Variable(x_new_s, dtype=tf.float32)
+        with tf.GradientTape(persistent=True, watch_accessed_variables=False) as tape:
+            tape.watch(x_var)
+            phi = self.model_phi(x_var)
+            psi = self.model_psi(x_var)
+
+        return phi.numpy(), psi.numpy()
+
     def compute_divergence(self, x_new):
         if (self.model_phi is None) or (self.model_psi is None):
             raise RuntimeError("You must call `fit` method first")
