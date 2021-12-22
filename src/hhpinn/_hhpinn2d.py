@@ -6,8 +6,6 @@ import tensorflow as tf
 
 from typing import Dict, List, Tuple, Union
 
-from sklearn.preprocessing import StandardScaler
-
 from hhpinn.scoring import mse
 from hhpinn.transformer import Transformer
 
