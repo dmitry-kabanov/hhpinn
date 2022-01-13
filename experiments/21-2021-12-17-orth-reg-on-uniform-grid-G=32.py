@@ -265,21 +265,21 @@ render_figure(
 
 # %%
 error_mse_list = []
-print("Mean squared errors on test dataset")
+print("Relative mean squared errors on test dataset")
 print("-----------------------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
-    error_mse = mse(test_u, pred)
+    error_mse = rel_mse(test_u, pred)
     # Sanity check that the validation loss at the end of training
     # is the same as prediction MSE here because I use the same data.
     # assert error_mse == model.history["val_loss"][-1]
-    print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
+    print("{:} Model {:44s} {:5.1f}".format(i, str(c), error_mse))
     error_mse_list.append(error_mse)
 
 plt.figure()
 plt.plot(error_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Prediction MSE")
+plt.ylabel("Absolute prediction MSE")
 plt.tight_layout(pad=0.1)
 best_model_idx = np.argmin(error_mse_list)
 print()
@@ -298,20 +298,20 @@ test_u_pot = test_u_curl_free
 test_u_sol = test_u_div_free
 pot_mse_list = []
 sol_mse_list = []
-print("Mean squared errors of potential subfield on test dataset")
+print("Relative mean squared errors of potential subfield on test dataset")
 print("-----------------------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred_pot, pred_sol = model.predict_separate_fields(test_x)
     pot_mse = rel_mse(test_u_pot, pred_pot)
     sol_mse = rel_mse(test_u_sol, pred_sol)
-    print("{:} Model {:44s} {:.2e} {:.2e}".format(i, str(c), pot_mse, sol_mse))
+    print("{:} Model {:44s} {:>5.1f} {:>5.1f}".format(i, str(c), pot_mse, sol_mse))
     pot_mse_list.append(pot_mse)
     sol_mse_list.append(pot_mse)
 
 plt.figure()
 plt.plot(pot_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Prediction pot. MSE")
+plt.ylabel("Relative pred. pot. MSE")
 plt.tight_layout(pad=0.1)
 
 render_figure(
@@ -322,7 +322,7 @@ render_figure(
 plt.figure()
 plt.plot(sol_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Prediction sol. MSE")
+plt.ylabel("Relative prediction sol. MSE")
 plt.tight_layout(pad=0.1)
 
 render_figure(
