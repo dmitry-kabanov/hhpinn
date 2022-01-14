@@ -24,11 +24,16 @@ def rel_mse(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     if y_true.shape != y_pred.shape:
         logger.warning("`y_true` and `y_pred` have different shapes")
 
-    errors = np.linalg.norm((y_true - y_pred) / y_pred, 2, axis=1)
-    assert len(errors) == len(y_true)
-    error_mse = np.mean(errors)
+    num = np.sum(np.linalg.norm(y_true - y_pred, 2, axis=1)**2)
+    den = np.sum(np.linalg.norm(y_true, 2, axis=1)**2)
+    error_mse = num / den
 
     return error_mse
+
+
+def rel_root_mse(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    r"""Return relative root mean squared error."""
+    return np.sqrt(rel_mse(y_true, y_pred))
 
 
 def rel_pw_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
