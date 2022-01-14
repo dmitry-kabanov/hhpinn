@@ -27,7 +27,7 @@ from typing import List
 from hhpinn import HHPINN2D
 from hhpinn.plotting import plot_true_and_pred_stream_fields
 from hhpinn.utils import render_figure
-from hhpinn.scoring import mse, rel_mse, rel_pw_error
+from hhpinn.scoring import mse, rel_mse, rel_root_mse, rel_pw_error
 
 
 # %% [markdown]
@@ -265,11 +265,11 @@ render_figure(
 
 # %%
 error_mse_list = []
-print("Relative mean squared errors on test dataset")
+print("Relative RMSE on test dataset")
 print("-----------------------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
-    error_mse = rel_mse(test_u, pred)
+    error_mse = rel_root_mse(test_u, pred)
     # Sanity check that the validation loss at the end of training
     # is the same as prediction MSE here because I use the same data.
     # assert error_mse == model.history["val_loss"][-1]
@@ -298,12 +298,12 @@ test_u_pot = test_u_curl_free
 test_u_sol = test_u_div_free
 pot_mse_list = []
 sol_mse_list = []
-print("Relative mean squared errors of potential subfield on test dataset")
+print("Relative RMSE of potential subfield on test dataset")
 print("-----------------------------------")
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred_pot, pred_sol = model.predict_separate_fields(test_x)
-    pot_mse = rel_mse(test_u_pot, pred_pot)
-    sol_mse = rel_mse(test_u_sol, pred_sol)
+    pot_mse = rel_root_mse(test_u_pot, pred_pot)
+    sol_mse = rel_root_mse(test_u_sol, pred_sol)
     print("{:} Model {:44s} {:>5.1f} {:>5.1f}".format(i, str(c), pot_mse, sol_mse))
     pot_mse_list.append(pot_mse)
     sol_mse_list.append(pot_mse)
@@ -311,7 +311,7 @@ for i, (c, model) in enumerate(zip(CONFIGS, models)):
 plt.figure()
 plt.plot(pot_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Relative pred. pot. MSE")
+plt.ylabel("Relative pred. pot. RMSE")
 plt.tight_layout(pad=0.1)
 
 render_figure(
@@ -322,7 +322,7 @@ render_figure(
 plt.figure()
 plt.plot(sol_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Relative prediction sol. MSE")
+plt.ylabel("Relative prediction sol. RMSE")
 plt.tight_layout(pad=0.1)
 
 render_figure(
