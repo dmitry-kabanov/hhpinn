@@ -91,11 +91,6 @@ test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(
 
 
 # %%
-plt.hist(train_u[:, 0], bins=50);
-
-# %%
-
-# %%
 models: List[HHPINN2D] = []
 
 # %% [markdown]
