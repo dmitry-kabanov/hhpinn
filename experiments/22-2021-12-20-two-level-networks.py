@@ -219,45 +219,6 @@ render_figure(
 
 
 # %% [markdown]
-# ## Plot gradient infinity norm during training
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["grad_phi_inf_norm"]) + 1, step),
-        models[i].history["grad_phi_inf_norm"][::step],
-        linestyle=styles[i],
-        label=c,
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Gradient phi Inf norm")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-render_figure(
-    to_file=os.path.join("_assets", "grad-phi-inf-history.pdf"), save=args["save"]
-)
-
-# %%
-plt.figure()
-for i, c in enumerate(CONFIGS):
-    plt.semilogy(
-        range(1, len(models[i].history["grad_psi_inf_norm"]) + 1, step),
-        models[i].history["grad_psi_inf_norm"][::step],
-        linestyle=styles[i],
-        label=c,
-    )
-plt.xlabel("Epochs")
-plt.ylabel("Gradient psi Inf norm")
-plt.legend(loc="lower left")
-plt.tight_layout(pad=0.3)
-
-render_figure(
-    to_file=os.path.join("_assets", "grad-psi-inf-history.pdf"), save=args["save"]
-)
-
-# %% [markdown]
 # ## Errors of all models
 
 # %%
