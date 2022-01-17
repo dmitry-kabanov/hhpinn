@@ -52,7 +52,7 @@ class HHPINN2D:
 
         self.model_phi: Union[tf.keras.Model, None] = None
         self.model_psi: Union[tf.keras.Model, None] = None
-        self.history: Dict[str, Union[Dict, List]]
+        self.history: Dict[str, Union[Dict, List]] = {}
         self.transformer = None
 
     def get_params(self):
