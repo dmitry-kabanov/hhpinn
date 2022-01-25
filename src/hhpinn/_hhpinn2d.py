@@ -177,7 +177,7 @@ class HHPINN2D:
                 # Potential (curl-free) part is the gradient of `phi`.
                 curl_free_part = t1.gradient(phi, x_train)
 
-                # Soenlidal (divergence-free) part in 2D is defined
+                # Solenoidal (divergence-free) part in 2D is defined
                 # by stream function: u = ∂psi_∂y, v = -∂psi_∂x.
                 stream_func_grad = t1.gradient(psi, x_train)
                 div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
