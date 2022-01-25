@@ -24,7 +24,7 @@ from typing import List
 from hhpinn import HHPINN2D
 from hhpinn.plotting import plot_true_and_pred_stream_fields
 from hhpinn.utils import render_figure
-from hhpinn.scoring import mse, rel_pw_error
+from hhpinn.scoring import mse, rel_mse, rel_root_mse, rel_pw_error
 
 
 # %% [markdown]
@@ -222,29 +222,65 @@ render_figure(
 # ## Errors of all models
 
 # %%
+test_u_pot = test_u_curl_free
+test_u_sol = test_u_div_free
+pot_mse_list = []
+sol_mse_list = []
 error_mse_list = []
-print("Mean squared errors on test dataset")
+print("Relative RMSE on test dataset")
 print("-----------------------------------")
+print("{} Model {:44s} {:>6s} {:>5s} {:>5s}".format("", "config", "Total", "Pot", "Sol"))
 for i, (c, model) in enumerate(zip(CONFIGS, models)):
     pred = model.predict(test_x)
-    error_mse = mse(test_u, pred)
-    # Sanity check that the validation loss at the end of training
-    # is the same as prediction MSE here because I use the same data.
-    # assert error_mse == model.history["val_loss"][-1]
-    print("{:} Model {:44s} {:.2e}".format(i, str(c), error_mse))
+    error_mse = rel_root_mse(test_u, pred)
+    pred_pot, pred_sol = model.predict_separate_fields(test_x)
+    pot_rmse = rel_root_mse(test_u_pot, pred_pot)
+    sol_rmse = rel_root_mse(test_u_sol, pred_sol)
+    print("{:} Model {:44s} {:5.0f} {:>5.0f} {:>5.0f}".format(
+            i, str(c), error_mse*100, pot_rmse*100, sol_rmse*100
+        )
+    )
     error_mse_list.append(error_mse)
+    pot_mse_list.append(pot_rmse)
+    sol_mse_list.append(pot_rmse)
 
 plt.figure()
 plt.plot(error_mse_list, "o")
 plt.xlabel("Model index")
-plt.ylabel("Prediction MSE")
+plt.ylabel("Relative prediction RMSE")
 plt.tight_layout(pad=0.1)
 best_model_idx = np.argmin(error_mse_list)
 print()
 print("Best model index: ", best_model_idx)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-mse-vs-model.pdf"),
+    to_file=os.path.join("_assets", "pred-rmse-vs-model.pdf"),
+    save=args["save"],
+)
+
+# %% [markdown]
+# ## Errors of subfields
+
+# %%
+plt.figure()
+plt.plot(pot_mse_list, "o")
+plt.xlabel("Model index")
+plt.ylabel("Relative pred. pot. RMSE")
+plt.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-pot-rmse-vs-model.pdf"),
+    save=args["save"],
+)
+
+plt.figure()
+plt.plot(sol_mse_list, "o")
+plt.xlabel("Model index")
+plt.ylabel("Relative prediction sol. RMSE")
+plt.tight_layout(pad=0.1)
+
+render_figure(
+    to_file=os.path.join("_assets", "pred-sol-mse-vs-model.pdf"),
     save=args["save"],
 )
 
