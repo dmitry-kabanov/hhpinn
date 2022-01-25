@@ -23,6 +23,7 @@ class TestHHPINN2D:
         HIDDEN_LAYERS = [27, 8, 101]
         EPOCHS = 22
         L2 = 1.27e-3
+        S3 = 8.15e-8
         S4 = 2.12e-1
         OPTIMIZER = "adam"
         LEARNING_RATE = 0.031
@@ -34,6 +35,7 @@ class TestHHPINN2D:
             hidden_layers=HIDDEN_LAYERS,
             epochs=EPOCHS,
             l2=L2,
+            s3=S3,
             s4=S4,
             optimizer=OPTIMIZER,
             learning_rate=LEARNING_RATE,
@@ -45,6 +47,7 @@ class TestHHPINN2D:
         npt.assert_equal(sut.hidden_layers, HIDDEN_LAYERS)
         npt.assert_equal(sut.epochs, EPOCHS)
         npt.assert_equal(sut.l2, L2)
+        npt.assert_equal(sut.s3, S3)
         npt.assert_equal(sut.s4, S4)
         npt.assert_equal(sut.optimizer, OPTIMIZER)
         npt.assert_equal(sut.learning_rate, LEARNING_RATE)

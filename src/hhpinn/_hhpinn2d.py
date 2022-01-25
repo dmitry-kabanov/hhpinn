@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple, Union
 
 from hhpinn.scoring import mse
 from hhpinn.transformer import Transformer
+from hhpinn._sobolev3reg import sobolev3reg
 
 
 class HHPINN2D:
@@ -24,6 +25,7 @@ class HHPINN2D:
         hidden_layers=[10],
         epochs=50,
         l2=0.0,
+        s3=0.0,
         s4=0.0,
         ip=0.0,
         G=8,
@@ -37,6 +39,7 @@ class HHPINN2D:
         self.hidden_layers = hidden_layers
         self.epochs = epochs
         self.l2 = l2
+        self.s3 = s3
         self.s4 = s4
         self.ip = ip
         self.G = G
@@ -46,7 +49,7 @@ class HHPINN2D:
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 12
+        self._nparams = 13
 
         self.model_phi: Union[tf.keras.Model, None] = None
         self.model_psi: Union[tf.keras.Model, None] = None
@@ -58,6 +61,7 @@ class HHPINN2D:
             "hidden_layers": self.hidden_layers,
             "epochs": self.epochs,
             "l2": self.l2,
+            "s3": self.s3,
             "s4": self.s4,
             "ip": self.ip,
             "G": self.G,
@@ -167,6 +171,9 @@ class HHPINN2D:
 
         tape_kw = dict(persistent=True, watch_accessed_variables=False)
 
+        s3reg_phi_fn = sobolev3reg(model_phi)
+        s3reg_psi_fn = sobolev3reg(model_psi)
+
         for e in range(self.epochs):
             with tf.GradientTape(persistent=True) as tape_loss:
                 with tf.GradientTape(**tape_kw) as t1:
@@ -185,6 +192,12 @@ class HHPINN2D:
                 u_pred = curl_free_part + div_free_part
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
                 misfit_mean = tf.reduce_mean(misfit)
+
+                x_colloc = x_colloc_grid
+                s3reg_phi = s3reg_phi_fn(x_colloc)
+                s3reg_phi_mean = tf.reduce_mean(s3reg_phi)
+                s3reg_psi = s3reg_psi_fn(x_colloc)
+                s3reg_psi_mean = tf.reduce_mean(s3reg_psi)
 
                 ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
                 if self.ip:
@@ -218,6 +231,7 @@ class HHPINN2D:
 
                 loss = (
                     misfit_mean
+                    + self.s3 * (s3reg_phi_mean + s3reg_psi_mean)
                     + self.ip * ip_reg_mean
                 )
 
