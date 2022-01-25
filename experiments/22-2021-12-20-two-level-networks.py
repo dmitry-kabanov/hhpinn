@@ -245,42 +245,19 @@ for i, (c, model) in enumerate(zip(CONFIGS, models)):
     sol_mse_list.append(sol_rmse)
 
 plt.figure()
-plt.plot(error_mse_list, "o")
+plt.plot(error_mse_list, "o", label="Total")
+plt.plot(pot_mse_list, "s", label="Potential")
+plt.plot(sol_mse_list, "*", label="Solenoidal")
 plt.xlabel("Model index")
 plt.ylabel("Relative prediction RMSE")
+plt.legend(loc="upper right")
 plt.tight_layout(pad=0.1)
 best_model_idx = np.argmin(error_mse_list)
 print()
-print("Best model index: ", best_model_idx)
+print("Best model index (wrt total error): ", best_model_idx)
 
 render_figure(
-    to_file=os.path.join("_assets", "pred-rmse-vs-model.pdf"),
-    save=args["save"],
-)
-
-# %% [markdown]
-# ## Errors of subfields
-
-# %%
-plt.figure()
-plt.plot(pot_mse_list, "o")
-plt.xlabel("Model index")
-plt.ylabel("Relative pred. pot. RMSE")
-plt.tight_layout(pad=0.1)
-
-render_figure(
-    to_file=os.path.join("_assets", "pred-pot-rmse-vs-model.pdf"),
-    save=args["save"],
-)
-
-plt.figure()
-plt.plot(sol_mse_list, "o")
-plt.xlabel("Model index")
-plt.ylabel("Relative prediction sol. RMSE")
-plt.tight_layout(pad=0.1)
-
-render_figure(
-    to_file=os.path.join("_assets", "pred-sol-mse-vs-model.pdf"),
+    to_file=os.path.join("_assets", "pred-rel-rmse-vs-model.pdf"),
     save=args["save"],
 )
 
