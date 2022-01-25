@@ -242,7 +242,7 @@ for i, (c, model) in enumerate(zip(CONFIGS, models)):
     )
     error_mse_list.append(error_mse)
     pot_mse_list.append(pot_rmse)
-    sol_mse_list.append(pot_rmse)
+    sol_mse_list.append(sol_rmse)
 
 plt.figure()
 plt.plot(error_mse_list, "o")
