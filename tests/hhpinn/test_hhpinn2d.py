@@ -231,6 +231,42 @@ class TestHHPINN2D:
 
         npt.assert_allclose(pred_tot, pred_pot + pred_sol, rtol=1e-7, atol=2e-7)
 
+    def test_larger_network_has_smaller_loss(self):
+        # Test that the neural network with larger number of degrees of freedom
+        # has smaller training loss.
+        # This test only works on average, that's why I run training
+        # TRIALS times and average the trials results and check the mean
+        # training loss.
+        TRIALS = 5
+        EPOCHS = 50
+
+        ds = TGV2DPlusTrigonometricFlow(N=10)
+        train_x, train_u, __, __ = ds.load_data()
+
+        losses_small = []
+        losses_large = []
+
+        for __ in range(TRIALS):
+            model_small = HHPINN2D(hidden_layers=[10], epochs=EPOCHS, optimizer="adam")
+            model_large = HHPINN2D(hidden_layers=[10, 5], epochs=EPOCHS,
+                                   optimizer="adam")
+            model_small.fit(train_x, train_u)
+            model_large.fit(train_x, train_u)
+
+            loss_small = model_small.history["loss"]
+            loss_large = model_large.history["loss"]
+
+            losses_small.append(loss_small)
+            losses_large.append(loss_large)
+
+        mean_loss_small = np.mean(losses_small, axis=0)
+        mean_loss_large = np.mean(losses_large, axis=0)
+        assert len(mean_loss_small) == EPOCHS
+
+        # Larger model should give on average smaller training loss
+        # as overfitting is easier with larger number of degrees of freedom.
+        npt.assert_array_less(mean_loss_large[-10:], mean_loss_small[-10:])
+
     def test_hhpinn2d_is_better_than_averaging_model(self):
         # We need to check it statistically as sometimes HHPINN2D
         # gives worse predictions, which depends on the randomized
