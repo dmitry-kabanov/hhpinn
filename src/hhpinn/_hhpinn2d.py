@@ -193,11 +193,14 @@ class HHPINN2D:
                 misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
                 misfit_mean = tf.reduce_mean(misfit)
 
-                x_colloc = x_colloc_grid
-                s3reg_phi = s3reg_phi_fn(x_colloc)
-                s3reg_phi_mean = tf.reduce_mean(s3reg_phi)
-                s3reg_psi = s3reg_psi_fn(x_colloc)
-                s3reg_psi_mean = tf.reduce_mean(s3reg_psi)
+                s3reg_phi_mean = tf.Variable(0.0, dtype=tf.float32)
+                s3reg_psi_mean = tf.Variable(0.0, dtype=tf.float32)
+                if self.s3:
+                    x_colloc = x_colloc_grid
+                    s3reg_phi = s3reg_phi_fn(x_colloc)
+                    s3reg_phi_mean = tf.reduce_mean(s3reg_phi)
+                    s3reg_psi = s3reg_psi_fn(x_colloc)
+                    s3reg_psi_mean = tf.reduce_mean(s3reg_psi)
 
                 ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
                 if self.ip:
