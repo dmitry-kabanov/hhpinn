@@ -101,7 +101,7 @@ class HHPINN2D:
 
         return model
 
-    def fit(self, x, y, validation_data=None):
+    def fit(self, x, y, validation_data=None, verbose=1):
         # Preprocess training data.
         # (xs, ys): scaled versions of (x, y)
         self.transformer = Transformer(self.preprocessing)
@@ -245,7 +245,8 @@ class HHPINN2D:
             self.history["misfit"].append(misfit_mean.numpy())
             self.history["ip"].append(ip_reg_mean.numpy())
 
-            print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
+            if verbose:
+                print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
 
             if self.save_grad_norm:
                 flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
