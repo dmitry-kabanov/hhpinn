@@ -272,6 +272,18 @@ class HHPINN2D:
                 val_loss = mse(validation_data[1], val_pred)
                 self.history["val_loss"].append(val_loss)
 
+            # Sanity checks that the variables for models used in this method
+            # are the same as the properties of the object.
+            tf.debugging.assert_equal(
+                self.model_phi.trainable_variables[-1],
+                model_phi.trainable_variables[-1]
+            )
+
+            tf.debugging.assert_equal(
+                self.model_psi.trainable_variables[-1],
+                model_psi.trainable_variables[-1]
+            )
+
     def predict(self, x_new, return_separate_fields=False):
         if (self.model_phi is None) or (self.model_psi is None):
             raise RuntimeError("You must call `fit` method first")
