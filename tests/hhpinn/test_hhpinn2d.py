@@ -1,9 +1,14 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
 import tensorflow as tf
 
-from hhpinn import HHPINN2D
+from hhpinn import AveragingModel, HHPINN2D
+from hhpinn.datasets import TGV2DPlusTrigonometricFlow
+
+from hhpinn.scoring import mse
+
+
+TEST_GRID_SIZE = (11, 11)
 
 
 class TestHHPINN2D:
@@ -225,3 +230,37 @@ class TestHHPINN2D:
         pred_pot, pred_sol = model.predict_separate_fields(x_new)
 
         npt.assert_allclose(pred_tot, pred_pot + pred_sol, rtol=1e-7, atol=2e-7)
+
+    def test_hhpinn2d_is_better_than_averaging_model(self):
+        # We need to check it statistically as sometimes HHPINN2D
+        # gives worse predictions, which depends on the randomized
+        # parameter initialization.
+        ds = TGV2DPlusTrigonometricFlow(N=50)
+        train_x, train_u, __, __ = ds.load_data()
+        test_x, test_u, __, __ = ds.load_data_on_grid(TEST_GRID_SIZE)
+
+        fails = 0
+
+        for __ in range(5):
+            try:
+                model_aver = AveragingModel()
+                model_pinn = HHPINN2D(
+                    hidden_layers=[10], epochs=50, optimizer="adam", learning_rate=1e-2)
+
+                model_aver.fit(train_x, train_u)
+                model_pinn.fit(train_x, train_u, verbose=0)
+
+                pred_aver = model_aver.predict(test_x)
+                pred_pinn = model_pinn.predict(test_x)
+
+                err_aver = mse(test_u, pred_aver)
+                err_pinn = mse(test_u, pred_pinn)
+
+                del model_aver
+                del model_pinn
+
+                assert err_pinn < err_aver
+            except AssertionError:
+                fails += 1
+
+        assert fails <= 1
