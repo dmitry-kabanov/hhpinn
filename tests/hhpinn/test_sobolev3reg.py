@@ -28,7 +28,7 @@ class TestSobolev3Reg:
         npt.assert_allclose(s3_fn, desired, rtol=1e-7, atol=1e-7)
 
     def test__nonlinear_function__should_have_expected_3rd_derivatives(self):
-        data = tf.random.uniform((20, 2))
+        data = tf.random.uniform((2000000, 2))
         x, y = tf.split(data, 2, axis=1)
 
         def u(data):
