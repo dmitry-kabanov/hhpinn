@@ -447,6 +447,18 @@ render_figure(
 # $1.19 \times 10^{-7}$.
 
 # %%
+div_Linf_norm_list = []
+print("Linf norm of divergence fields on test dataset")
+print("Closer to zero is better")
+print("-----------------------------------")
+print("{} {:>8s} {:>10s}".format("", "s3", "Linf-norm"))
+for i, (c, model) in enumerate(zip(CONFIGS, models)):
+    div_field = model.compute_divergence(test_x)
+    div_Linf_norm = np.linalg.norm(div_field, np.Inf)
+    print("{:} {:>8.1e} {:>8.1e}".format(i, c.s3, div_Linf_norm))
+    div_Linf_norm_list.append(div_Linf_norm)
+
+# %%
 div_field_first = model_first.compute_divergence(test_x)
 div_field_first_norm = np.linalg.norm(div_field_first, np.Inf)
 hhpinn.plotting.plot_error_field_2D(test_x, div_field_first, TEST_GRID_SIZE, locs=train_x)
