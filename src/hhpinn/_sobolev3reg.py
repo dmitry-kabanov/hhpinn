@@ -21,6 +21,7 @@ def sobolev3reg(model):
     model : Keras model
         Must implement a mathematical function that maps R^2 to R.
     """
+    @tf.function
     def compute(pts):
         with tf.GradientTape(
             persistent=True, watch_accessed_variables=False
