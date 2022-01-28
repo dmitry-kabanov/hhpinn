@@ -10,3 +10,7 @@ dependencies:
   - ipython
   - pandas
   - scikit-learn
+  - pytest
+  - pip
+  - pip:
+    - tensorflow=2.7
