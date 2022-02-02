@@ -248,9 +248,6 @@ class HHPINN2D:
             self.history["misfit"].append(misfit_mean.numpy())
             self.history["ip"].append(ip_reg_mean.numpy())
 
-            if verbose:
-                print("Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy()))
-
             if self.save_grad_norm:
                 flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
                 self.history["grad_phi_inf_norm"].append(
@@ -271,6 +268,12 @@ class HHPINN2D:
                 val_pred = self.predict(validation_data[0])
                 val_loss = mse(validation_data[1], val_pred)
                 self.history["val_loss"].append(val_loss)
+
+            if verbose:
+                msg = "Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy())
+                if validation_data:
+                    msg += " | Val_loss: {:.1e}".format(val_loss)
+                print(msg)
 
             # Sanity checks that the variables for models used in this method
             # are the same as the properties of the object.
