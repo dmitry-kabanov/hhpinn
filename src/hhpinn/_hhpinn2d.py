@@ -269,13 +269,14 @@ class HHPINN2D:
                 flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
                 self.history["grad_psi"][e] = flat_grad
 
+            val_loss = 0.0
             if validation_data:
                 val_pred = self.predict(validation_data[0])
                 val_loss = mse(validation_data[1], val_pred)
                 self.history["val_loss"].append(val_loss)
 
             if verbose:
-                msg = "Epoch: {:d} | Loss: {:.1e}".format(e, loss.numpy())
+                msg = "Epoch: {:05d} | Loss: {:.1e}".format(e, loss.numpy())
                 if validation_data:
                     msg += " | Val_loss: {:.1e}".format(val_loss)
                 print(msg)
