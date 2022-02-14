@@ -29,6 +29,7 @@ class HHPINN2D:
         s4=0.0,
         ip=0.0,
         G=8,
+        use_batch_normalization=False,
         use_uniform_grid_for_regs=True,
         optimizer="sgd",
         learning_rate=0.01,
@@ -44,12 +45,13 @@ class HHPINN2D:
         self.ip = ip
         self.G = G
         self.use_uniform_grid_for_regs = use_uniform_grid_for_regs
+        self.use_batch_normalization = use_batch_normalization
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.preprocessing = preprocessing
         self.save_grad_norm = save_grad_norm
         self.save_grad = save_grad
-        self._nparams = 13
+        self._nparams = 14
 
         self.model_phi: Union[tf.keras.Model, None] = None
         self.model_psi: Union[tf.keras.Model, None] = None
@@ -66,6 +68,7 @@ class HHPINN2D:
             "ip": self.ip,
             "G": self.G,
             "use_uniform_grid_for_regs": self.use_uniform_grid_for_regs,
+            "use_batch_normalization": self.use_batch_normalization,
             "optimizer": self.optimizer,
             "learning_rate": self.learning_rate,
             "preprocessing": self.preprocessing,
@@ -80,7 +83,7 @@ class HHPINN2D:
         """Build and return Keras model with given hyperparameters."""
         inp = tf.keras.layers.Input(2)
         x = inp
-        for neurons in self.hidden_layers:
+        for i, neurons in enumerate(self.hidden_layers):
             x = tf.keras.layers.Dense(
                 neurons,
                 activation="tanh",
@@ -88,6 +91,8 @@ class HHPINN2D:
                 kernel_regularizer=tf.keras.regularizers.l2(l2=self.l2),
                 bias_regularizer=tf.keras.regularizers.l2(l2=self.l2),
             )(x)
+            if self.use_batch_normalization and i+1 != len(self.hidden_layers):
+                x = tf.keras.layers.BatchNormalization()(x)
 
         out = tf.keras.layers.Dense(
             1,
@@ -178,8 +183,8 @@ class HHPINN2D:
             with tf.GradientTape(persistent=True) as tape_loss:
                 with tf.GradientTape(**tape_kw) as t1:
                     t1.watch(x_train)
-                    phi = model_phi(x_train)
-                    psi = model_psi(x_train)
+                    phi = model_phi(x_train, training=True)
+                    psi = model_psi(x_train, training=True)
 
                 # Potential (curl-free) part is the gradient of `phi`.
                 curl_free_part = t1.gradient(phi, x_train)
@@ -217,8 +222,8 @@ class HHPINN2D:
                         persistent=True, watch_accessed_variables=False
                     ) as t1:
                         t1.watch(x_colloc_ip)
-                        phi = model_phi(x_colloc_ip)
-                        psi = model_psi(x_colloc_ip)
+                        phi = model_phi(x_colloc_ip, training=True)
+                        psi = model_psi(x_colloc_ip, training=True)
 
                     # Potential (curl-free part) is a gradient of scalar-valued
                     # function phi.
