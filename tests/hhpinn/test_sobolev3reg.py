@@ -13,7 +13,7 @@ class TestSobolev3Reg:
             [2.3, 1.35],
             [4.4, 12.3],
         ])
-        def u(x): return (tf.matmul(x, [[1], [4]]))**3
+        def u(x, training=False): return (tf.matmul(x, [[1], [4]]))**3
         s3reg_fn = sobolev3reg(u)
 
         s3_fn = s3reg_fn(x)
@@ -31,7 +31,7 @@ class TestSobolev3Reg:
         data = tf.random.uniform((2000000, 2))
         x, y = tf.split(data, 2, axis=1)
 
-        def u(data):
+        def u(data, training=False):
             x, y = tf.split(data, 2, axis=1)
             uu = tf.sin(x + 4*y) + (5*x + 2*y)**4
             return uu
