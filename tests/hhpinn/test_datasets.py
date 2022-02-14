@@ -37,18 +37,16 @@ class TestTGV2DPlusTrigonometricFlow:
 class TestRibeiroEtal2016:
     def test_grid_size_param_is_used(self):
         grid_size = (11, 11)
-        ds = RibeiroEtal2016Dataset(grid_size)
+        ds = RibeiroEtal2016Dataset()
 
-        assert ds.grid_size == grid_size
-
-        phi = ds.generate_phi_on_grid()
-        psi = ds.generate_psi_on_grid()
+        phi = ds.generate_phi_on_grid(grid_size)
+        psi = ds.generate_psi_on_grid(grid_size)
 
         assert phi.shape == grid_size
         assert psi.shape == grid_size
 
     def test_constants(self):
-        ds = RibeiroEtal2016Dataset((5, 5))
+        ds = RibeiroEtal2016Dataset()
 
         assert ds.p0 == (+3.0, -3.0)
         assert ds.p1 == (-3.0, -3.0)
@@ -59,12 +57,12 @@ class TestRibeiroEtal2016:
 
     def test_mean_for_potential_component_maximum(self):
         grid_size = (101, 101)
-        ds = RibeiroEtal2016Dataset(grid_size)
+        ds = RibeiroEtal2016Dataset()
         n_samples = 20
 
         phi_samples = []
         for i in range(n_samples):
-            phi_i = ds.generate_phi_on_grid()
+            phi_i = ds.generate_phi_on_grid(grid_size)
             phi_samples.append(phi_i)
 
         phi_average = np.mean(phi_samples, axis=0)
@@ -78,12 +76,12 @@ class TestRibeiroEtal2016:
 
     def test_mean_for_solenoidal_field_maximum(self):
         grid_size = (101, 101)
-        ds = RibeiroEtal2016Dataset(grid_size)
+        ds = RibeiroEtal2016Dataset()
         n_samples = 20
 
         psi_samples = []
         for i in range(n_samples):
-            psi_i = ds.generate_psi_on_grid()
+            psi_i = ds.generate_psi_on_grid(grid_size)
             psi_samples.append(psi_i)
 
         psi_average = np.mean(psi_samples, axis=0)
@@ -91,3 +89,17 @@ class TestRibeiroEtal2016:
 
         max = np.max(psi_average)
         npt.assert_allclose(max, 1.0, rtol=1e-6, atol=1e-6)
+
+    def test_load_data_on_grid(self):
+        grid_size = (5, 5)
+        N = np.prod(grid_size)
+        ds = RibeiroEtal2016Dataset()
+
+        X, U, U_pot, U_sol = ds.load_data_on_grid(grid_size)
+
+        assert X.shape == (N, 2)
+        assert U.shape == (N, 2)
+        assert U_pot.shape == (N, 2)
+        assert U_sol.shape == (N, 2)
+
+        npt.assert_allclose(U, U_pot + U_sol, rtol=1e-12, atol=1e-12)

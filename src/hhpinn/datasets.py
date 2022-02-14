@@ -188,28 +188,21 @@ class RibeiroEtal2016Dataset:
 
     We here do not randomize the centers of the Gaussians.
 
-    Parameters
-    ----------
-    grid_size : tuple (Nx, Ny)
-        2-tuple containing resolution along x- and y-axis, respectively.
     """
-    def __init__(self, grid_size=(101, 101)):
-        self.grid_size = grid_size
-
+    def __init__(self):
         self.p0 = (+3.0, -3.0)  # Source center in potential field.
         self.p1 = (-3.0, -3.0)  # Sink center in potential field.
         self.p2 = (+0.0, +3.0)  # Vortex center in solenoidal field.
 
         self.lb, self.ub = (-6.0, 6.0)
 
-        x = np.linspace(self.lb, self.ub, self.grid_size[0])
-        y = np.linspace(self.lb, self.ub, self.grid_size[1])
-
-        self.xx, self.yy = np.meshgrid(x, y)
-
-    def generate_phi_on_grid(self):
+    def generate_phi_on_grid(self, grid_size=(11, 11)):
         x0, y0 = self.p0
         x1, y1 = self.p1
+
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
 
         xx, yy = self.xx, self.yy
 
@@ -217,7 +210,10 @@ class RibeiroEtal2016Dataset:
         sink = -np.exp(-0.5 * ((xx-x1)**2 + (yy-y1)**2))
         return source + sink
 
-    def generate_psi_on_grid(self):
+    def generate_psi_on_grid(self, grid_size=(11, 11)):
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
         xx, yy = self.xx, self.yy
         x2, y2 = self.p2
 
@@ -261,11 +257,14 @@ class RibeiroEtal2016Dataset:
 
         return fig
 
-    def generate_potential_velocity_on_grid(self):
+    def generate_potential_velocity_on_grid(self, grid_size=(11, 11)):
         """Return u, v for potential field."""
         x0, y0 = self.p0
         x1, y1 = self.p1
 
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
         xx, yy = self.xx, self.yy
 
         source = np.exp(-0.5 * ((xx-x0)**2 + (yy-y0)**2))
@@ -282,10 +281,13 @@ class RibeiroEtal2016Dataset:
 
         return u, v
 
-    def generate_solenoidal_velocity_on_grid(self):
+    def generate_solenoidal_velocity_on_grid(self, grid_size=(11, 11)):
         """Return u, v for potential field."""
         x2, y2 = self.p2
 
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
         xx, yy = self.xx, self.yy
 
         psi = np.exp(-0.5 * ((xx-x2)**2 + (yy - y2)**2))
@@ -299,11 +301,41 @@ class RibeiroEtal2016Dataset:
 
         return u, v
 
-    def compute_inner_product(self):
+    def load_data_on_grid(self, grid_size=(11, 11)):
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+        xx, yy = self.xx, self.yy
+
+        X = np.column_stack((
+            np.reshape(xx, (-1, 1)),
+            np.reshape(yy, (-1, 1))
+        ))
+
+        u_pot, v_pot = self.generate_potential_velocity_on_grid(grid_size)
+
+        U_pot = np.column_stack((
+            np.reshape(u_pot, (-1, 1)),
+            np.reshape(v_pot, (-1, 1)),
+        ))
+
+        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid(grid_size)
+
+        U_sol = np.column_stack((
+            np.reshape(u_sol, (-1, 1)),
+            np.reshape(v_sol, (-1, 1))
+        ))
+
+        U = U_pot + U_sol
+
+        return X, U, U_pot, U_sol
+
+
+    def compute_inner_product(self, grid_size=(11, 11)):
         """Compute inner product of subfields."""
 
-        u_pot, v_pot = self.generate_potential_velocity_on_grid()
-        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid()
+        u_pot, v_pot = self.generate_potential_velocity_on_grid(grid_size)
+        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid(grid_size)
 
         vel_pot = np.column_stack((
             np.reshape(u_pot, (-1, 1)),
