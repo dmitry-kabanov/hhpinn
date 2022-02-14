@@ -18,6 +18,7 @@ class TestHHPINN2D:
         assert sut.hidden_layers == [10]
         assert sut.epochs == 50
         assert sut.l2 == 0.0
+        assert sut.use_batch_normalization is False
         assert sut.optimizer == "sgd"
         assert sut.learning_rate == 0.01
         assert sut.preprocessing == "identity"
@@ -30,6 +31,7 @@ class TestHHPINN2D:
         L2 = 1.27e-3
         S3 = 8.15e-8
         S4 = 2.12e-1
+        USE_BATCH_NORMALIZATION = True
         OPTIMIZER = "adam"
         LEARNING_RATE = 0.031
         PREPROCESSING = "standardization"
@@ -42,6 +44,7 @@ class TestHHPINN2D:
             l2=L2,
             s3=S3,
             s4=S4,
+            use_batch_normalization=USE_BATCH_NORMALIZATION,
             optimizer=OPTIMIZER,
             learning_rate=LEARNING_RATE,
             preprocessing=PREPROCESSING,
@@ -54,6 +57,7 @@ class TestHHPINN2D:
         npt.assert_equal(sut.l2, L2)
         npt.assert_equal(sut.s3, S3)
         npt.assert_equal(sut.s4, S4)
+        npt.assert_equal(sut.use_batch_normalization, USE_BATCH_NORMALIZATION)
         npt.assert_equal(sut.optimizer, OPTIMIZER)
         npt.assert_equal(sut.learning_rate, LEARNING_RATE)
         npt.assert_equal(sut.preprocessing, PREPROCESSING)
