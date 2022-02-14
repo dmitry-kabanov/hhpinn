@@ -91,6 +91,25 @@ class TestHHPINN2D:
 
         assert actual_neurons == exp_neurons
 
+    def test_nonlinear_model_with_bn_has_correct_number_of_neurons_two_layers(self):
+        sut = HHPINN2D(hidden_layers=[3, 7], use_batch_normalization=True)
+
+        # Expected number of neurons. There is no bias in the output layer
+        # as it does not play any role in training and prediction
+        # due to differentiation of the model.
+        exp_neurons = (
+            3 * 2 + 3  # Dense 1
+            + 3 + 3   # Batch normalization 1
+            + 7 * 3 + 7  # Dense 2
+            + 1 * 7 + 0  # Output layer
+        )
+
+        actual_neurons = 0
+        for w in sut.build_model().trainable_variables:
+            actual_neurons += np.prod(w.shape)
+
+        assert actual_neurons == exp_neurons
+
     def test_save_load_before_training(self, tmpdir):
         # Variable `tmpdir` is a `pytest` fixture.
         m1 = HHPINN2D()
