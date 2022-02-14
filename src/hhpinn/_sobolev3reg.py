@@ -35,7 +35,7 @@ def sobolev3reg(model):
                     persistent=True, watch_accessed_variables=False
                 ) as t1:
                     t1.watch(pts)
-                    f = model(pts)
+                    f = model(pts, training=True)
 
                 # Compute velocity predictions from the stream function `psi`.
                 # To simplify notation, we denote components of the gradient
