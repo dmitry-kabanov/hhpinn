@@ -188,19 +188,23 @@ class HHPINN2D:
             self.history["ip"].append(ip_reg_mean.numpy())
 
             if self.save_grad_norm:
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi
+                                            if g is not None])
                 self.history["grad_phi_inf_norm"].append(
                     np.linalg.norm(flat_grad, ord=np.inf)
                 )
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi
+                                            if g is not None])
                 self.history["grad_psi_inf_norm"].append(
                     np.linalg.norm(flat_grad, ord=np.inf)
                 )
 
             if self.save_grad and (((e + 1) % self.save_grad == 0) or e == 0):
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi])
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_phi
+                                            if g is not None])
                 self.history["grad_phi"][e] = flat_grad
-                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi])
+                flat_grad = np.concatenate([g.numpy().ravel() for g in grad_psi
+                                            if g is not None])
                 self.history["grad_psi"][e] = flat_grad
 
             val_loss = 0.0
