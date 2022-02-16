@@ -174,80 +174,14 @@ class HHPINN2D:
             trainable=False,
         )
 
-        tape_kw = dict(persistent=True, watch_accessed_variables=False)
-
-        s3reg_phi_fn = sobolev3reg(model_phi)
-        s3reg_psi_fn = sobolev3reg(model_psi)
+        train_step_fn = self.train_step_wrapper(
+            opt_phi, opt_psi, x_colloc_grid, xmin, xmax
+        )
 
         for e in range(self.epochs):
-            with tf.GradientTape(persistent=True) as tape_loss:
-                with tf.GradientTape(**tape_kw) as t1:
-                    t1.watch(x_train)
-                    phi = model_phi(x_train, training=True)
-                    psi = model_psi(x_train, training=True)
-
-                # Potential (curl-free) part is the gradient of `phi`.
-                curl_free_part = t1.gradient(phi, x_train)
-
-                # Solenoidal (divergence-free) part in 2D is defined
-                # by stream function: u = ∂psi_∂y, v = -∂psi_∂x.
-                stream_func_grad = t1.gradient(psi, x_train)
-                div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-
-                u_pred = curl_free_part + div_free_part
-                misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
-                misfit_mean = tf.reduce_mean(misfit)
-
-                s3reg_phi_mean = tf.Variable(0.0, dtype=tf.float32)
-                s3reg_psi_mean = tf.Variable(0.0, dtype=tf.float32)
-                if self.s3:
-                    x_colloc = x_colloc_grid
-                    s3reg_phi = s3reg_phi_fn(x_colloc)
-                    s3reg_phi_mean = tf.reduce_mean(s3reg_phi)
-                    s3reg_psi = s3reg_psi_fn(x_colloc)
-                    s3reg_psi_mean = tf.reduce_mean(s3reg_psi)
-
-                ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
-                if self.ip:
-                    if self.use_uniform_grid_for_regs:
-                        x_colloc_ip = x_colloc_grid
-                    else:
-                        x_colloc_ip = tf.Variable(
-                            np.random.uniform(xmin, xmax, size=(256, 2)),
-                            dtype=tf.float32,
-                            trainable=False,
-                        )
-
-                    with tf.GradientTape(
-                        persistent=True, watch_accessed_variables=False
-                    ) as t1:
-                        t1.watch(x_colloc_ip)
-                        phi = model_phi(x_colloc_ip, training=True)
-                        psi = model_psi(x_colloc_ip, training=True)
-
-                    # Potential (curl-free part) is a gradient of scalar-valued
-                    # function phi.
-                    pot_part = t1.gradient(phi, x_colloc_ip)
-
-                    # Divergence-free part in 2D is defined by stream function:
-                    # u = ∂psi_∂y, v = -∂psi_∂x.
-                    stream_func_grad = t1.gradient(psi, x_colloc_ip)
-                    sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
-
-                    ip_reg = tf.square(tf.reduce_sum(pot_part * sol_part, axis=1))
-                    ip_reg_mean = tf.reduce_mean(ip_reg)
-
-                loss = (
-                    misfit_mean
-                    + self.s3 * (s3reg_phi_mean + s3reg_psi_mean)
-                    + self.ip * ip_reg_mean
-                )
-
-            grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
-            opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
-
-            grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
-            opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
+            loss, misfit_mean, ip_reg_mean, grad_phi, grad_psi = (
+                train_step_fn(x_train, y_train)
+            )
 
             self.history["loss"].append(loss.numpy())
             self.history["misfit"].append(misfit_mean.numpy())
@@ -292,6 +226,97 @@ class HHPINN2D:
                 self.model_psi.trainable_variables[-1],
                 model_psi.trainable_variables[-1]
             )
+
+    def train_step_wrapper(self, opt_phi, opt_psi, x_colloc_grid, xmin, xmax):
+        model_phi: tf.keras.Model = self.model_phi
+        model_psi: tf.keras.Model = self.model_psi
+
+        x_colloc_grid = x_colloc_grid
+
+        opt_phi = opt_phi
+        opt_psi = opt_psi
+
+        tape_kw = dict(persistent=True, watch_accessed_variables=False)
+
+        s3reg_phi_fn = sobolev3reg(model_phi)
+        s3reg_psi_fn = sobolev3reg(model_psi)
+
+        xmin, xmax = xmin, xmax
+
+        @tf.function
+        def train_step(x_train, y_train):
+            with tf.GradientTape(persistent=True) as tape_loss:
+                with tf.GradientTape(**tape_kw) as t1:
+                    t1.watch(x_train)
+                    phi = model_phi(x_train, training=True)
+                    psi = model_psi(x_train, training=True)
+
+                # Potential (curl-free) part is the gradient of `phi`.
+                curl_free_part = t1.gradient(phi, x_train)
+
+                # Solenoidal (divergence-free) part in 2D is defined
+                # by stream function: u = ∂psi_∂y, v = -∂psi_∂x.
+                stream_func_grad = t1.gradient(psi, x_train)
+                div_free_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+
+                u_pred = curl_free_part + div_free_part
+                misfit = tf.norm(u_pred - y_train, 2, axis=1) ** 2
+                misfit_mean = tf.reduce_mean(misfit)
+
+                # s3reg_phi_mean = tf.Variable(0.0, dtype=tf.float32)
+                # s3reg_psi_mean = tf.Variable(0.0, dtype=tf.float32)
+                #if self.s3:
+                x_colloc = x_colloc_grid
+                s3reg_phi = s3reg_phi_fn(x_colloc)
+                s3reg_phi_mean = tf.reduce_mean(s3reg_phi)
+                s3reg_psi = s3reg_psi_fn(x_colloc)
+                s3reg_psi_mean = tf.reduce_mean(s3reg_psi)
+
+                # ip_reg_mean = tf.Variable(0.0, dtype=tf.float32)
+                # if self.ip:
+                if self.use_uniform_grid_for_regs:
+                    x_colloc_ip = x_colloc_grid
+                else:
+                    x_colloc_ip = tf.Variable(
+                        np.random.uniform(xmin, xmax, size=(256, 2)),
+                        dtype=tf.float32,
+                        trainable=False,
+                    )
+
+                with tf.GradientTape(
+                    persistent=True, watch_accessed_variables=False
+                ) as t1:
+                    t1.watch(x_colloc_ip)
+                    phi = model_phi(x_colloc_ip, training=True)
+                    psi = model_psi(x_colloc_ip, training=True)
+
+                # Potential (curl-free part) is a gradient of scalar-valued
+                # function phi.
+                pot_part = t1.gradient(phi, x_colloc_ip)
+
+                # Divergence-free part in 2D is defined by stream function:
+                # u = ∂psi_∂y, v = -∂psi_∂x.
+                stream_func_grad = t1.gradient(psi, x_colloc_ip)
+                sol_part = tf.matmul(stream_func_grad, [[0, -1], [1, 0]])
+
+                ip_reg = tf.square(tf.reduce_sum(pot_part * sol_part, axis=1))
+                ip_reg_mean = tf.reduce_mean(ip_reg)
+
+                loss = (
+                    misfit_mean
+                    + self.s3 * (s3reg_phi_mean + s3reg_psi_mean)
+                    + self.ip * ip_reg_mean
+                )
+
+            grad_phi = tape_loss.gradient(loss, model_phi.trainable_variables)
+            opt_phi.apply_gradients(zip(grad_phi, model_phi.trainable_variables))
+
+            grad_psi = tape_loss.gradient(loss, model_psi.trainable_variables)
+            opt_psi.apply_gradients(zip(grad_psi, model_psi.trainable_variables))
+
+            return loss, misfit_mean, ip_reg_mean, grad_phi, grad_psi
+
+        return train_step
 
     def predict(self, x_new, return_separate_fields=False):
         if (self.model_phi is None) or (self.model_psi is None):
