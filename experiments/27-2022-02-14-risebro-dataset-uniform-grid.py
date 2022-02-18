@@ -49,8 +49,11 @@ CONFIGS = [
     Config([100, 50], "adam", 1e-0),
 ]
 
+# Grid size for training data.
+TRAIN_GRID_SIZE = (51, 51)
+
 # Grid size for validation data.
-VAL_GRID_SIZE = (11, 11)
+VAL_GRID_SIZE = (16, 16)
 
 # Grid size for test data.
 TEST_GRID_SIZE = (101, 101)
@@ -82,10 +85,10 @@ except (ImportError, NameError):
 # ## Load data
 
 # %%
-ds = hhpinn.datasets.RibeiroEtal2016Dataset(grid_size=(11, 11))
-train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data_on_grid((7, 7))
+ds = hhpinn.datasets.RibeiroEtal2016Dataset()
+train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data_on_grid(TRAIN_GRID_SIZE)
 val_x, val_u, val_u_curl_free, val_u_div_free = ds.load_data_on_grid(VAL_GRID_SIZE)
-test_x, test_U, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(TEST_GRID_SIZE)
+test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(TEST_GRID_SIZE)
 
 
 # %%
