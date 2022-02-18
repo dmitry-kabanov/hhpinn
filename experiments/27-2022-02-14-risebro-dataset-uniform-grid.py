@@ -299,6 +299,8 @@ plt.tight_layout(pad=0.1)
 best_model_idx = np.argmin(error_mse_list)
 print()
 print("Best model index (wrt total error): ", best_model_idx)
+best_model_idx = np.argmin(pot_mse_list + sol_mse_list)
+print("Best model index (wrt subfields error): ", best_model_idx)
 
 render_figure(
     to_file=os.path.join("_assets", "pred-rel-rmse-vs-model.pdf"),
