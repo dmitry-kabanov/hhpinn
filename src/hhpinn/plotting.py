@@ -74,11 +74,28 @@ def plot_stream_field_2D(N, domain, x_values, u_values, true_values=None):
         arrowstyle="->",
         arrowsize=1,
     )
+
+    # We check here if the domain of type [0, Lx]x[0, Ly] or [Lx1, Lx2]x[Ly1, Ly2].
+    if isinstance(domain[0], (int, float)):
+        xleft = -0.02 * domain[0]
+        xright = 1.02 * domain[0]
+        yleft = -0.02 * domain[0]
+        yright = 1.02 * domain[1]
+        Lx = float(domain[0])
+        Ly = float(domain[1])
+    else:
+        xleft = 1.02 * domain[0][0]
+        xright = 1.02 * domain[0][1]
+        yleft = 1.02 * domain[1][0]
+        yright = 1.02 * domain[1][1]
+        Lx = float(domain[0][1] - domain[0][0])
+        Ly = float(domain[1][1] - domain[1][0])
+
     ax.set_xlabel("$x_1$")
     ax.set_ylabel("$x_2$")
-    ax.set_xlim(-0.02*domain[0], 1.02*domain[0])
-    ax.set_ylim(-0.02*domain[1], 1.02*domain[1])
-    if 0.98 <= domain[0] / domain[1] <= 1.02:
+    ax.set_xlim(xleft, xright)
+    ax.set_ylim(yleft, yright)
+    if 0.98 <= Lx / Ly <= 1.02:
         ax.set_aspect("equal")
     fig.tight_layout(pad=0.1)
 
