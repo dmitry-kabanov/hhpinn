@@ -196,6 +196,8 @@ class RibeiroEtal2016Dataset:
 
         self.lb, self.ub = (-6.0, 6.0)
 
+        self.domain = ((-6.0, 6.0), (-6.0, 6.0))
+
     def generate_phi_on_grid(self, grid_size=(11, 11)):
         x0, y0 = self.p0
         x1, y1 = self.p1
