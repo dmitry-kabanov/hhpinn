@@ -41,12 +41,12 @@ OUTDIR = "_output"
 # hidden-layers, optimizer, multiplier of orthogonality regularizer.
 Config = namedtuple("Config", ["hl", "opt", "ip"])
 CONFIGS = [
-    Config([100, 50], "adam", 1e-8),
-    Config([100, 50], "adam", 1e-4),
-    Config([100, 50], "adam", 1e-3),
-    Config([100, 50], "adam", 1e-2),
-    Config([100, 50], "adam", 1e-1),
-    Config([100, 50], "adam", 1e-0),
+    Config([64], "adam", 1e-8),
+    Config([64], "adam", 1e-4),
+    Config([64], "adam", 1e-3),
+    Config([64], "adam", 1e-2),
+    Config([64], "adam", 1e-1),
+    Config([64], "adam", 1e-0),
 ]
 
 # Grid size for training data.
@@ -108,13 +108,16 @@ if not os.listdir(OUTDIR):
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
         [200, 500, 1000], [0.1, 0.05, 0.01, 0.001]
     )
-    lr = 1e-1
+    # lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+    #     [200, 500, 1000], [0.1, 0.09, 0.05, 0.01]
+    # )
+    #lr = 1e-1
     start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=1000,
+            epochs=20000,
             l2=0,
             s3=0,
             s4=0,
