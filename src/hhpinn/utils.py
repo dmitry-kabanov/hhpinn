@@ -31,7 +31,7 @@ def render_figure(fig=None, to_file='figure.pdf', save=False):
             os.makedirs(dirname)
 
         try:
-            fig.savefig(to_file)
+            fig.savefig(to_file, dpi=300)
             logging.info("Save figure to file `%s`" % to_file)
         except IOError:
             logging.warning("Saving figure to file `%s` failed" % to_file)
