@@ -354,3 +354,103 @@ class RibeiroEtal2016Dataset:
         ip = np.mean(dot_prod_pw)
 
         return ip
+
+
+class TomaharuSudaDataset:
+    """Dataset based on the talk by Tomaharu Suda.
+
+    The scalar potential phi = 0.5 (x**2 + y**2) and solenoidal part (-y, x)^T.
+
+    See slide 9 from presentation at
+    http://math.bu.edu/keio2018/talks/TSuda.pdf
+
+    Parameters
+    ----------
+    N : int, optional (default 10)
+        Number of measurements to choose from the generated data.
+    domain : ndarray with shape (2,)
+        Default is [(-10, 10), (-10, 10)].
+    random_seed : int, optional (default 10)
+        Random seed that is used to generate random locations.
+    """
+
+    def __init__(
+        self, N=10, domain=np.asarray([(-10, 10), (-10, 10)]), random_seed=10
+    ):
+        self.N = N
+        self.domain = domain
+        self.random_seed = random_seed
+
+        self.factor = 0.5  # Multiplier of the curl_free field.
+
+    def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Choose randomly `self.N` location points and generate data."""
+        np.random.seed(self.random_seed)
+
+        N = self.N
+        domain = self.domain
+
+        xP = np.random.random_sample((N, 2)) * domain
+        uP = np.zeros((N, 2))
+        curl_free_uP = np.zeros((N, 2))
+        div_free_uP = np.zeros((N, 2))
+        for i in range(N):
+            div_free_uP[i] = self._vortex(xP[i])
+            curl_free_uP[i] = self._curl_free(xP[i])
+            uP[i] = curl_free_uP[i] + div_free_uP[i]
+
+        return xP, uP, curl_free_uP, div_free_uP
+
+    def load_data_on_grid(
+        self, grid_size=(11, 11)
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Returns data in sklearn format `(X, y)` generated on the uniform grid."""
+        # Note that in the `np.mgrid` notation a:b:n*1j means "create n points
+        # between `a` and `b` with `b` inclusive".
+        D = self.domain
+        Yg, Xg = np.mgrid[
+            D[0][0] : D[0][1] : grid_size[1] * 1j, D[1][0] : D[1][1] : grid_size[0] * 1j
+        ]
+
+        result, curl_free_result, div_free_result = self.eval_on_grid(Xg, Yg)
+
+        X_col = Xg.flatten()[:, None]
+        Y_col = Yg.flatten()[:, None]
+
+        X = np.hstack((X_col, Y_col))
+
+        u = result[0].flatten()[:, None]
+        v = result[1].flatten()[:, None]
+        y = np.hstack((u, v))
+
+        cfu = curl_free_result[0].flatten()[:, None]
+        cfv = curl_free_result[1].flatten()[:, None]
+        cfy = np.hstack((cfu, cfv))
+
+        dfu = div_free_result[0].flatten()[:, None]
+        dfv = div_free_result[1].flatten()[:, None]
+        dfy = np.hstack((dfu, dfv))
+
+        return X, y, cfy, dfy
+
+    def eval_on_grid(self, X_grid, Y_grid):
+        """Evaluate vortex data on the grid (`X_grid`, `Y_grid`)."""
+        result = np.zeros((2,) + X_grid.shape, dtype=float)
+        curl_free_result = np.zeros((2,) + X_grid.shape, dtype=float)
+        div_free_result = np.zeros((2,) + X_grid.shape, dtype=float)
+        for j in range(X_grid.shape[0]):
+            for i in range(X_grid.shape[1]):
+                x = np.asarray([X_grid[j, i], Y_grid[j, i]])
+                curl_free_result[:, j, i] = self._curl_free(x)
+                div_free_result[:, j, i] = self._vortex(x)
+                result[:, j, i] = curl_free_result[:, j, i] + div_free_result[:, j, i]
+
+        return result, curl_free_result, div_free_result
+
+    def _curl_free(self, x):
+        """Compute potential flow at point `x`."""
+        return np.asarray([-x[0], -x[1]])
+
+    def _vortex(self, x):
+        """Compute vortex field value at point `x`."""
+        return np.asarray([-x[1], x[0]])

@@ -3,6 +3,9 @@ import numpy.testing as npt
 
 from hhpinn.datasets import TGV2DPlusTrigonometricFlow
 from hhpinn.datasets import RibeiroEtal2016Dataset
+from hhpinn.datasets import TomaharuSudaDataset
+
+from hhpinn.plotting import plot_stream_field_2D
 
 
 class TestTGV2DPlusTrigonometricFlow:
@@ -103,3 +106,13 @@ class TestRibeiroEtal2016:
         assert U_sol.shape == (N, 2)
 
         npt.assert_allclose(U, U_pot + U_sol, rtol=1e-12, atol=1e-12)
+
+
+class TestTomaharuSudaDataset:
+    def test_i_dont_know_what(self):
+        grid_size = (101, 101)
+        ds = TomaharuSudaDataset()
+
+        test_x, test_u, __, __ = ds.load_data_on_grid(grid_size)
+
+        plot_stream_field_2D(grid_size, ds.domain, test_x, test_u)
