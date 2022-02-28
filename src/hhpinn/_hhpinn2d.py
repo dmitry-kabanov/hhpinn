@@ -93,6 +93,7 @@ class HHPINN2D:
             )(x)
             if self.use_batch_normalization and i+1 != len(self.hidden_layers):
                 x = tf.keras.layers.BatchNormalization()(x)
+                x = tf.keras.layers.Dropout(0.2)(x)
 
         out = tf.keras.layers.Dense(
             1,
