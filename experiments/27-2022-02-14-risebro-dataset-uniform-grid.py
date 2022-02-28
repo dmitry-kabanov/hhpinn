@@ -414,7 +414,6 @@ render_figure(
     save=args["save"],
 )
 
-
 plot_true_and_pred_stream_fields(
     TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free, pred_u_best_curl_free
 )
@@ -431,6 +430,11 @@ plot_true_and_two_pred_stream_fields(
 
 render_figure(
     to_file=os.path.join("_assets", "recon-pot-first-best.pdf"),
+    save=args["save"],
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-pot-first-best.png"),
     save=args["save"],
 )
 
@@ -472,6 +476,11 @@ plot_true_and_two_pred_stream_fields(
 
 render_figure(
     to_file=os.path.join("_assets", "recon-sol-first-best.pdf"),
+    save=args["save"],
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-sol-first-best.png"),
     save=args["save"],
 )
 
