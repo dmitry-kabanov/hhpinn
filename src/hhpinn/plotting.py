@@ -181,6 +181,103 @@ def plot_true_and_pred_stream_fields(grid_size, domain, x, true_u, pred_u):
     fig.tight_layout(pad=0.1)
 
 
+def plot_true_and_two_pred_stream_fields(grid_size, domain, x, true_u,
+                                         pred_u_1, pred_u_2):
+    """Plot true and predicted stream fields `true_u` and `pred_u`.
+
+    Parameters
+    ----------
+    grid_size : tuple (nx: int, ny: int)
+        Grid size.
+    domain : tuple (Lx, Ly)
+        Domain size.
+    x, true_u, pred_u : ndarray (nx*ny, 2)
+        Locations, true and predicted vector fields.
+
+    """
+    if len(grid_size) != 2 or len(domain) != 2:
+        raise ValueError("Should be two-dimensional")
+
+    if x.shape[1] != 2:
+        raise ValueError("Should be two-dimensional")
+
+    if true_u.shape != x.shape:
+        raise ValueError("Shape mismatch")
+
+    if pred_u_1.shape != x.shape:
+        raise ValueError("Shape mismatch")
+
+    if pred_u_2.shape != x.shape:
+        raise ValueError("Shape mismatch")
+
+    X = np.reshape(x[:, 0], grid_size)
+    Y = np.reshape(x[:, 1], grid_size)
+    true_U = np.reshape(true_u[:, 0], grid_size)
+    true_V = np.reshape(true_u[:, 1], grid_size)
+    pred_U_1 = np.reshape(pred_u_1[:, 0], grid_size)
+    pred_V_1 = np.reshape(pred_u_1[:, 1], grid_size)
+    pred_U_2 = np.reshape(pred_u_2[:, 0], grid_size)
+    pred_V_2 = np.reshape(pred_u_2[:, 1], grid_size)
+
+    true_speed = np.sqrt(true_U**2 + true_V**2)
+    pred_speed_1 = np.sqrt(pred_U_1**2 + pred_V_1**2)
+    pred_speed_2 = np.sqrt(pred_U_2**2 + pred_V_2**2)
+    true_lw = 4.0 * true_speed / true_speed.max()
+    pred_lw_1 = 4.0 * pred_speed_1 / pred_speed_1.max()
+    pred_lw_2 = 4.0 * pred_speed_2 / pred_speed_2.max()
+
+    fig, ax = plt.subplots(1, 3, sharey=True, figsize=FIGSIZE_WIDE)
+
+    kw_props = dict(
+        color="k",
+        density=1.0,
+        arrowstyle="->",
+        arrowsize=1,
+    )
+
+    # We check here if the domain of type [0, Lx]x[0, Ly] or [Lx1, Lx2]x[Ly1, Ly2].
+    if isinstance(domain[0], (int, float)):
+        xleft = -0.02 * domain[0]
+        xright = 1.02 * domain[0]
+        yleft = -0.02 * domain[0]
+        yright = 1.02 * domain[1]
+        Lx = float(domain[0])
+        Ly = float(domain[1])
+    else:
+        xleft = 1.02 * domain[0][0]
+        xright = 1.02 * domain[0][1]
+        yleft = 1.02 * domain[1][0]
+        yright = 1.02 * domain[1][1]
+        Lx = float(domain[0][1] - domain[0][0])
+        Ly = float(domain[1][1] - domain[1][0])
+
+    ax[0].streamplot(X, Y, true_U, true_V, linewidth=true_lw, **kw_props)
+    ax[0].set_xlabel("$x_1$")
+    ax[0].set_ylabel("$x_2$")
+    ax[0].set_xlim(xleft, xright)
+    ax[0].set_ylim(yleft, yright)
+    if 0.98 <= Lx / Ly <= 1.02:
+        ax[0].set_aspect("equal")
+
+    ax[1].streamplot(X, Y, pred_U_1, pred_V_1, linewidth=pred_lw_1, **kw_props)
+    ax[1].set_xlabel("$x_1$")
+    ax[1].set_ylabel("$x_2$")
+    ax[1].set_xlim(xleft, xright)
+    ax[1].set_ylim(yleft, yright)
+    if 0.98 <= Lx / Ly <= 1.02:
+        ax[1].set_aspect("equal")
+
+    ax[2].streamplot(X, Y, pred_U_2, pred_V_2, linewidth=pred_lw_2, **kw_props)
+    ax[2].set_xlabel("$x_1$")
+    ax[2].set_ylabel("$x_2$")
+    ax[2].set_xlim(xleft, xright)
+    ax[2].set_ylim(yleft, yright)
+    if 0.98 <= Lx / Ly <= 1.02:
+        ax[2].set_aspect("equal")
+
+    fig.tight_layout(pad=0.1)
+
+
 def plot_error_field_2D(inputs, errors, grid_size, locs=[], vmin=None,
                       vmax=None, cbar_label=None):
     plot_scalar_field(inputs, errors, grid_size, locs, vmin,
