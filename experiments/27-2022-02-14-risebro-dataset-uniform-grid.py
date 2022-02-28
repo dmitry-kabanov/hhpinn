@@ -18,15 +18,18 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 import hhpinn
 
 from collections import namedtuple
+from pathlib import Path
 from typing import List
 
 from hhpinn import HHPINN2D
 from hhpinn.plotting import plot_true_and_pred_stream_fields
+from hhpinn.plotting import plot_true_and_two_pred_stream_fields
 from hhpinn.utils import render_figure
 from hhpinn.scoring import rel_root_mse, rel_pw_error
 
@@ -41,12 +44,12 @@ OUTDIR = "_output"
 # hidden-layers, optimizer, multiplier of orthogonality regularizer.
 Config = namedtuple("Config", ["hl", "opt", "ip"])
 CONFIGS = [
-    Config([64], "adam", 1e-8),
-    Config([64], "adam", 1e-4),
+    Config([64], "adam", 0.0),
     Config([64], "adam", 1e-3),
-    Config([64], "adam", 1e-2),
     Config([64], "adam", 1e-1),
     Config([64], "adam", 1e-0),
+    Config([64], "adam", 1e+1),
+    Config([64], "adam", 1e+2),
 ]
 
 # Grid size for training data.
@@ -106,7 +109,7 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 500, 1000], [0.1, 0.05, 0.01, 0.001]
+        [200, 500, 1000, 10000], [0.1, 0.05, 0.01, 0.001, 0.0001]
     )
     # lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     #     [200, 500, 1000], [0.1, 0.09, 0.05, 0.01]
@@ -117,7 +120,7 @@ if not os.listdir(OUTDIR):
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=20000,
+            epochs=100000,
             l2=0,
             s3=0,
             s4=0,
@@ -274,6 +277,7 @@ test_u_sol = test_u_div_free
 pot_mse_list = []
 sol_mse_list = []
 error_mse_list = []
+lambda_list = []
 print("Relative RMSE on test dataset")
 print("-----------------------------------")
 print("{} Model {:44s} {:>6s} {:>5s} {:>5s}".format("", "config", "Total", "Pot", "Sol"))
@@ -287,9 +291,30 @@ for i, (c, model) in enumerate(zip(CONFIGS, models)):
             i, str(c), error_mse*100, pot_rmse*100, sol_rmse*100
         )
     )
+    lambda_list.append(c.ip)
     error_mse_list.append(error_mse)
     pot_mse_list.append(pot_rmse)
     sol_mse_list.append(sol_rmse)
+
+sci_fmt = lambda x: r"\num{%.0e}" % x
+per_fmt = lambda x: "%d" % (x*100)
+formatters = [sci_fmt, per_fmt, per_fmt, per_fmt]
+header = [r"$\lambda$", r"$e_{\text{tot}}$", r"$e_{\text{pot}}$",
+           r"$e_{\text{sol}}$"]
+err_df = pd.DataFrame({
+    "lambda": lambda_list,
+    "rrmse": error_mse_list,
+    "pot_rrmse": pot_mse_list,
+    "sol_rrmse": sol_mse_list,
+})
+err_df.index = err_df.index + 1
+err_df.to_latex(
+    Path("_assets") / "ribeiro-errors.tex",
+    header=header,
+    formatters=formatters,
+    escape=False
+)
+
 
 plt.figure()
 plt.plot(error_mse_list, "o", label="Total")
@@ -352,6 +377,21 @@ render_figure(
     save=args["save"],
 )
 
+plot_true_and_two_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u,
+    pred_u_first, pred_u_best
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-total-first-best.pdf"),
+    save=args["save"],
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-total-first-best.png"),
+    save=args["save"],
+)
+
 # %% [markdown]
 # ## True and predicted best field for potential (curl-free) part
 
@@ -384,6 +424,16 @@ render_figure(
     save=args["save"],
 )
 
+plot_true_and_two_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_curl_free,
+    pred_u_first_curl_free, pred_u_best_curl_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-pot-first-best.pdf"),
+    save=args["save"],
+)
+
 # %% [markdown]
 # ## True and predicted best field for solenoidal (div-free) part
 
@@ -412,6 +462,16 @@ plot_true_and_pred_stream_fields(
 
 render_figure(
     to_file=os.path.join("_assets", "true-vs-pred-div-free-model=best.pdf"),
+    save=args["save"],
+)
+
+plot_true_and_two_pred_stream_fields(
+    TEST_GRID_SIZE, ds.domain, test_x, test_u_div_free,
+    pred_u_first_div_free, pred_u_best_div_free
+)
+
+render_figure(
+    to_file=os.path.join("_assets", "recon-sol-first-best.pdf"),
     save=args["save"],
 )
 
