@@ -37,16 +37,19 @@ OUTDIR = "_output"
 # hidden-layers, optimizer, multiplier of orthogonality regularizer.
 Config = namedtuple("Config", ["hl", "opt", "ip"])
 CONFIGS = [
-    Config([100, 50], "adam", 1e-8),
-    Config([100, 50], "adam", 1e-4),
-    Config([100, 50], "adam", 1e-3),
-    Config([100, 50], "adam", 1e-2),
-    Config([100, 50], "adam", 1e-1),
-    Config([100, 50], "adam", 1e-0),
+    Config([64, 32], "adam", 1e-8),
+    Config([64, 32], "adam", 1e-4),
+    Config([64, 32], "adam", 1e-3),
+    Config([64, 32], "adam", 1e-2),
+    Config([64, 32], "adam", 1e-1),
+    Config([64, 32], "adam", 1e-0),
 ]
 
+# Grid size for training data.
+TRAIN_GRID_SIZE = (101, 101)
+
 # Grid size for validation data.
-GRID_SIZE = (11, 11)
+VAL_GRID_SIZE = (16, 16)
 
 # Grid size for test data.
 TEST_GRID_SIZE = (101, 101)
@@ -83,8 +86,8 @@ except (ImportError, NameError):
 
 # %%
 ds = hhpinn.datasets.TGV2DPlusTrigonometricFlow(N=200)
-train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data()
-val_x, val_u, val_u_curl_free, val_u_div_free = ds.load_data_on_grid(GRID_SIZE)
+train_x, train_u, train_u_curl_free, train_u_div_free = ds.load_data_on_grid(TRAIN_GRID_SIZE)
+val_x, val_u, val_u_curl_free, val_u_div_free = ds.load_data_on_grid(VAL_GRID_SIZE)
 test_x, test_u, test_u_curl_free, test_u_div_free = ds.load_data_on_grid(
     TEST_GRID_SIZE
 )
@@ -105,17 +108,20 @@ if not os.listdir(OUTDIR):
     #     decay_rate=0.1,
     # )
     lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        [200, 500, 1000], [0.1, 0.05, 0.01, 0.001]
+            [200, 500, 1000], [0.1, 0.05, 0.01, 0.001]
+        )
+    lr = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+        [200, 500, 1000], [0.1, 0.09, 0.05, 0.01]
     )
-    lr = 1e-1
+    # lr = 1e-2
     start = time.time()
     models = []
     for i, c in enumerate(CONFIGS):
         model = HHPINN2D(
             hidden_layers=c.hl,
-            epochs=1000,
-            l2=0,
-            s3=0,
+            epochs=4000,
+            l2=1e-2,
+            s3=1e-2,
             s4=0,
             ip=c.ip,
             G=32,
