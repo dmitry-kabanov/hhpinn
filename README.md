@@ -9,11 +9,11 @@ decomposition.
 
 1. Clone the project with `git` via SSH:
 
-       git clone git@github.com:dmitry-kabanov/helmholtz-hodge-pinn.git
+       git clone git@github.com:dmitry-kabanov/hhpinn.git
 
     or HTTPS:
 
-       git clone https://github.com/dmitry-kabanov/helmholtz-hodge-pinn.git
+       git clone https://github.com/dmitry-kabanov/hhpinn.git
 
 2. Install [conda](https://docs.conda.io) environment for the project:
 
