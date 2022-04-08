@@ -459,8 +459,8 @@ class OverlappingFieldsDataset:
         dexp2_dx = -(xx-x2)
         dexp2_dy = -(yy-y2)
 
-        u = source * dexp0_dx + sink * dexp2_dx
-        v = source * dexp0_dy + sink * dexp2_dy
+        u = sink * dexp0_dx + source * dexp2_dx
+        v = sink * dexp0_dy + source * dexp2_dy
 
         return u, v
 
