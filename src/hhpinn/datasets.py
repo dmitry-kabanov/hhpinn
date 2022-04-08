@@ -356,6 +356,195 @@ class RibeiroEtal2016Dataset:
         return ip
 
 
+class OverlappingFieldsDataset:
+    """Dataset in which sources, sinks, and vortices overlap.
+
+
+    """
+    def __init__(self):
+        self.p0 = (+2.0, +0.0)  # Sink center in potential field.
+        self.p1 = (+0.0, +2.0)  # Vortex
+        self.p2 = (-2.0, +0.0)  # Source center in potential field.
+        self.p3 = (+0.0, -2.0)  # Vortex
+        self.p4 = (+0.0, +0.0)  # Central vortex
+
+        self.lb, self.ub = (-6.0, 6.0)
+
+        self.domain = ((-6.0, 6.0), (-6.0, 6.0))
+
+    def generate_phi_on_grid(self, grid_size=(51, 51)):
+        x0, y0 = self.p0
+        x2, y2 = self.p2
+
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+
+        xx, yy = self.xx, self.yy
+
+        sink = -np.exp(-0.5 * ((xx-x0)**2 + (yy-y0)**2))
+        source = np.exp(-0.5 * ((xx-x2)**2 + (yy-y2)**2))
+        return source + sink
+
+    def generate_psi_on_grid(self, grid_size=(51, 51)):
+        x1, y1 = self.p1
+        x3, y3 = self.p3
+        x4, y4 = self.p4
+
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+        xx, yy = self.xx, self.yy
+
+        psi1 = np.exp(-0.5 * ((xx-x1)**2 + (yy - y1)**2))
+        psi3 = -np.exp(-0.5 * ((xx-x3)**2 + (yy - y3)**2))
+        psi4 = np.exp(-0.5 * ((xx-x4)**2 + (yy - y4)**2))
+
+        return psi1 + psi3 + psi4
+
+    def plot_phi(self):
+        """Plot potential (phi) component of the vector field.
+
+        Returns
+        -------
+        fig : plt.Figure
+            Handle to matplotlib Figure object.
+        """
+        phi = self.generate_phi_on_grid()
+
+        fig = plt.figure()
+        plt.pcolormesh(self.xx, self.yy, phi)
+        plt.xlabel(r"$x$")
+        plt.ylabel(r"$y$")
+        plt.colorbar()
+        plt.tight_layout(pad=0.1)
+
+        return fig
+
+    def plot_psi(self):
+        """Plot solenoidal (psi) component of the vector field.
+
+        Returns
+        -------
+        fig : plt.Figure
+            Handle to matplotlib Figure object.
+        """
+        psi = self.generate_psi_on_grid()
+
+        fig = plt.figure()
+        plt.pcolormesh(self.xx, self.yy, psi)
+        plt.xlabel(r"$x$")
+        plt.ylabel(r"$y$")
+        plt.colorbar()
+        plt.tight_layout(pad=0.1)
+
+        return fig
+
+    def generate_potential_velocity_on_grid(self, grid_size=(11, 11)):
+        """Return u, v for potential field."""
+        x0, y0 = self.p0
+        x2, y2 = self.p2
+
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+        xx, yy = self.xx, self.yy
+
+        sink = -np.exp(-0.5 * ((xx-x0)**2 + (yy-y0)**2))
+        source = np.exp(-0.5 * ((xx-x2)**2 + (yy-y2)**2))
+
+        # Derivatives of the expression inside Gaussians:
+        dexp0_dx = -(xx-x0)
+        dexp0_dy = -(yy-y0)
+        dexp2_dx = -(xx-x2)
+        dexp2_dy = -(yy-y2)
+
+        u = source * dexp0_dx + sink * dexp2_dx
+        v = source * dexp0_dy + sink * dexp2_dy
+
+        return u, v
+
+    def generate_solenoidal_velocity_on_grid(self, grid_size=(11, 11)):
+        """Return u, v for potential field."""
+        x1, y1 = self.p1
+        x3, y3 = self.p3
+        x4, y4 = self.p4
+
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+        xx, yy = self.xx, self.yy
+
+        psi1 = np.exp(-0.5 * ((xx-x1)**2 + (yy - y1)**2))
+        psi3 = -np.exp(-0.5 * ((xx-x3)**2 + (yy - y3)**2))
+        psi4 = np.exp(-0.5 * ((xx-x4)**2 + (yy - y4)**2))
+
+        # Derivatives of the expression inside the Gaussian:
+        dpsi1_dx = -(xx-x1)
+        dpsi1_dy = -(yy-y1)
+        dpsi3_dx = -(xx-x3)
+        dpsi3_dy = -(yy-y3)
+        dpsi4_dx = -(xx-x4)
+        dpsi4_dy = -(yy-y4)
+
+        u = -(psi1 * dpsi1_dy + psi3 * dpsi3_dy + psi4 * dpsi4_dy)
+        v = +(psi1 * dpsi1_dx + psi3 * dpsi3_dx + psi4 * dpsi4_dx)
+
+        return u, v
+
+    def load_data_on_grid(self, grid_size=(11, 11)):
+        x = np.linspace(self.lb, self.ub, grid_size[0])
+        y = np.linspace(self.lb, self.ub, grid_size[1])
+        self.xx, self.yy = np.meshgrid(x, y)
+        xx, yy = self.xx, self.yy
+
+        X = np.column_stack((
+            np.reshape(xx, (-1, 1)),
+            np.reshape(yy, (-1, 1))
+        ))
+
+        u_pot, v_pot = self.generate_potential_velocity_on_grid(grid_size)
+
+        U_pot = np.column_stack((
+            np.reshape(u_pot, (-1, 1)),
+            np.reshape(v_pot, (-1, 1)),
+        ))
+
+        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid(grid_size)
+
+        U_sol = np.column_stack((
+            np.reshape(u_sol, (-1, 1)),
+            np.reshape(v_sol, (-1, 1))
+        ))
+
+        U = U_pot + U_sol
+
+        return X, U, U_pot, U_sol
+
+
+    def compute_inner_product(self, grid_size=(11, 11)):
+        """Compute inner product of subfields."""
+
+        u_pot, v_pot = self.generate_potential_velocity_on_grid(grid_size)
+        u_sol, v_sol = self.generate_solenoidal_velocity_on_grid(grid_size)
+
+        vel_pot = np.column_stack((
+            np.reshape(u_pot, (-1, 1)),
+            np.reshape(v_pot, (-1, 1)),
+        ))
+
+        vel_sol = np.column_stack((
+            np.reshape(u_sol, (-1, 1)),
+            np.reshape(v_sol, (-1, 1)),
+        ))
+
+        dot_prod_pw = np.sum(vel_pot * vel_sol, axis=1)
+
+        ip = np.mean(dot_prod_pw)
+
+        return ip
+
+
 class TomaharuSudaDataset:
     """Dataset based on the talk by Tomaharu Suda.
 
